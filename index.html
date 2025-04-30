@@ -234,7 +234,7 @@
             </div>
             <div id="idea-task-list">
                 <p class="text-slate-400 text-center italic">Loading ideas...</p>
-            </div>
+                </div>
         </div>
 
         <div id="daily-summary" class="hidden"> <h3 class="text-xl font-bold">Daily Wins Recap!</h3>
@@ -370,16 +370,110 @@
         function formatTimeTo12Hour(timeString) { if (!timeString || !/^\d{2}:\d{2}$/.test(timeString)) { return timeString; } const [hours, minutes] = timeString.split(':'); const hourNum = parseInt(hours, 10); const ampm = hourNum >= 12 ? 'PM' : 'AM'; let hour12 = hourNum % 12; if (hour12 === 0) { hour12 = 12; } return `${hour12}:${minutes} ${ampm}`; }
 
         // --- Data Management Functions (Firestore - RENAMED Collections) ---
-         async function loadTasksFromFirestore(dateString) {
-             if (!db || !hustleTasksCollection) { console.error("Firestore 'hustle_tasks' collection not initialized when loading tasks."); throw new Error("Database collection 'hustle_tasks' not available."); }
-             console.log(`Loading daily tasks for ${dateString}...`); const docRef = hustleTasksCollection.doc(dateString);
-             try { const docSnap = await docRef.get(); if (docSnap.exists()) { const data = docSnap.data(); return { todo: data.todo || [], inprogress: data.inprogress || [], done: data.done || [] }; } else { return { todo: [], inprogress: [], done: [] }; } }
-             catch (error) { console.error(`Error getting daily tasks document for ${dateString}:`, error); if (error.code === 'unavailable') { alert(`Could not connect to Firestore to load tasks for ${formatDisplayDate(dateString)}. Please check your internet connection.`); } else { alert(`Error loading tasks for ${formatDisplayDate(dateString)}.`); } throw error; }
-         }
-        async function saveTasksToFirestore(dateString, tasksForDate) { if (!db || !hustleTasksCollection) { console.error("Firestore 'hustle_tasks' collection not initialized."); return; } if (!dateString) { console.error("Cannot save daily tasks without a dateString."); return; } console.log(`Saving daily tasks for ${dateString}...`, tasksForDate); const docRef = hustleTasksCollection.doc(dateString); try { await docRef.set(tasksForDate); console.log("Daily tasks successfully saved for date:", dateString); } catch (error) { console.error("Error saving daily tasks:", error); alert("Error saving daily tasks."); } }
-        async function loadIdeaTasksFromFirestore() { if (!db || !hustleIdeaBoxCollection) { console.error("Firestore 'hustle_ideaBoxTasks' collection not initialized when loading ideas."); return []; } console.log("Loading idea tasks from Firestore..."); const ideaTasks = []; try { const querySnapshot = await hustleIdeaBoxCollection.orderBy("createdAt", "desc").get(); querySnapshot.forEach((doc) => { ideaTasks.push({ id: doc.id, ...doc.data() }); }); console.log(`Loaded ${ideaTasks.length} idea tasks.`); return ideaTasks; } catch (error) { console.error("Error getting idea tasks:", error); if (error.code === 'unavailable') { alert("Could not connect to Firestore to load ideas. Please check your internet connection."); } throw error; } }
 
-        // *** MODIFIED addIdeaTaskToFirestore with .then/.catch and more checks ***
+        // *** MODIFIED loadTasksFromFirestore with Detailed Error Logging ***
+        async function loadTasksFromFirestore(dateString) {
+            if (!db || !hustleTasksCollection) {
+                const errorMsg = "Firestore 'hustle_tasks' collection not initialized when loading tasks.";
+                console.error(errorMsg);
+                // Display a more user-friendly message if needed, but the console error is key
+                // selectedDateDisplay.textContent = "Error: Database connection issue.";
+                throw new Error(errorMsg); // Throw error to be caught by caller if necessary
+            }
+
+            console.log(`Attempting to load daily tasks for date: ${dateString}...`);
+            // Ensure dateString is valid before creating doc reference
+            if (!dateString || typeof dateString !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                 console.error(`Invalid dateString provided to loadTasksFromFirestore: ${dateString}`);
+                 alert(`Internal Error: Invalid date format used (${dateString}). Cannot load tasks.`);
+                 throw new Error(`Invalid dateString: ${dateString}`);
+            }
+            const docRef = hustleTasksCollection.doc(dateString);
+
+            try {
+                console.log(`Workspaceing document: ${docRef.path}`);
+                const docSnap = await docRef.get();
+
+                if (docSnap.exists()) {
+                    console.log(`Document found for ${dateString}. Data:`, docSnap.data());
+                    const data = docSnap.data() || {}; // Use empty object if data is null/undefined
+
+                    // Basic validation: Ensure expected keys exist and are arrays (or default)
+                    const tasks = {
+                        todo: Array.isArray(data.todo) ? data.todo : [],
+                        inprogress: Array.isArray(data.inprogress) ? data.inprogress : [],
+                        done: Array.isArray(data.done) ? data.done : []
+                    };
+                    console.log(`Successfully processed tasks for ${dateString}.`);
+                    return tasks;
+                } else {
+                    console.log(`No document found for ${dateString}, returning empty task lists.`);
+                    return { todo: [], inprogress: [], done: [] }; // No tasks for this date yet
+                }
+            } catch (error) {
+                // --- THIS IS THE CRITICAL PART ---
+                console.error(`❌❌❌ ERROR loading daily tasks document for ${dateString}:`, error); // Log the full error object
+                console.error("Error Code:", error.code); // Log specific code if available
+                console.error("Error Message:", error.message); // Log specific message
+
+                // Display a user-facing message, but keep it simple
+                alert(`Failed to load tasks for ${formatDisplayDate(dateString)}. Check console for details (F12 -> Console).`);
+
+                // Re-throw the error so the caller function (.e.g, displayTasksForDate) knows it failed
+                throw error;
+            }
+        }
+        // *** END MODIFIED loadTasksFromFirestore ***
+
+
+        async function saveTasksToFirestore(dateString, tasksForDate) {
+             if (!db || !hustleTasksCollection) { console.error("Firestore 'hustle_tasks' collection not initialized."); return; }
+             if (!dateString || typeof dateString !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) { // Added dateString validation
+                 console.error(`Invalid dateString provided to saveTasksToFirestore: ${dateString}. Aborting save.`);
+                 alert(`Internal Error: Invalid date format used (${dateString}). Cannot save tasks.`);
+                 return;
+             }
+             console.log(`Attempting to save daily tasks for ${dateString}... Data:`, tasksForDate);
+             const docRef = hustleTasksCollection.doc(dateString);
+             try {
+                 // Use set with merge option if you only want to update fields present in tasksForDate
+                 // await docRef.set(tasksForDate, { merge: true });
+                 // Or use set without merge to completely overwrite the document (current behavior)
+                 await docRef.set(tasksForDate);
+                 console.log("Daily tasks successfully saved for date:", dateString);
+             } catch (error) {
+                 console.error(`❌❌❌ Error saving daily tasks for ${dateString}:`, error); // Enhanced logging
+                 console.error("Error Code:", error.code);
+                 console.error("Error Message:", error.message);
+                 alert(`Error saving daily tasks for ${formatDisplayDate(dateString)}. Check console for details.`);
+             }
+         }
+
+        async function loadIdeaTasksFromFirestore() {
+            if (!db || !hustleIdeaBoxCollection) { console.error("Firestore 'hustle_ideaBoxTasks' collection not initialized when loading ideas."); return []; }
+            console.log("Loading idea tasks from Firestore...");
+            const ideaTasks = [];
+            try {
+                const querySnapshot = await hustleIdeaBoxCollection.orderBy("createdAt", "desc").get();
+                querySnapshot.forEach((doc) => {
+                    ideaTasks.push({ id: doc.id, ...doc.data() });
+                });
+                console.log(`Loaded ${ideaTasks.length} idea tasks.`);
+                return ideaTasks;
+            } catch (error) {
+                console.error("❌❌❌ Error getting idea tasks:", error); // Enhanced logging
+                console.error("Error Code:", error.code);
+                console.error("Error Message:", error.message);
+                if (error.code === 'unavailable') {
+                    alert("Could not connect to Firestore to load ideas. Please check your internet connection.");
+                } else {
+                    alert("Error loading ideas. Check console for details.");
+                }
+                throw error; // Re-throw
+            }
+        }
+
+
         async function addIdeaTaskToFirestore(taskText) {
             console.log("DEBUG: Inside addIdeaTaskToFirestore, text:", taskText);
             // Explicitly check db and collection reference right before use
@@ -409,9 +503,8 @@
                 throw error; // Re-throw error so the calling function's catch block can handle it
             }
         }
-        // *** END MODIFIED addIdeaTaskToFirestore ***
 
-        // *** MODIFIED deleteIdeaTaskFromFirestore with try/catch ***
+
         async function deleteIdeaTaskFromFirestore(taskId) {
             if (!db || !hustleIdeaBoxCollection) { console.error("Firestore 'hustle_ideaBoxTasks' collection not initialized."); throw new Error("Database not initialized for Idea Box."); }
             console.log("DEBUG: Attempting to delete idea task with ID:", taskId);
@@ -420,11 +513,16 @@
                 console.log("DEBUG: Idea task deleted successfully from Firestore: ", taskId);
             } catch (error) {
                 console.error("DEBUG: Error deleting idea task from Firestore: ", error);
-                alert(`Error deleting idea task: ${error.message}`);
+                 // Check if it's a permission error specifically
+                 if (error.code === 'permission-denied') {
+                    alert(`Error deleting idea task: Permission denied. Check Firestore rules allow 'delete' on hustle_ideaBoxTasks.`);
+                 } else {
+                    alert(`Error deleting idea task: ${error.message}. Check console.`);
+                 }
                 throw error; // Re-throw error
             }
         }
-        // *** END MODIFIED deleteIdeaTaskFromFirestore ***
+
 
         // --- Core Application Functions ---
         function updateTimeDisplay() { if (timeDateDisplay) timeDateDisplay.textContent = formatLiveDateTime(BOSTON_TIMEZONE); }
@@ -434,14 +532,13 @@
         function createProgressElements() { const container = document.createElement('div'); container.classList.add('task-progress-container'); const progressBar = document.createElement('div'); progressBar.classList.add('progress-bar'); const progressBarFill = document.createElement('div'); progressBarFill.classList.add('progress-bar-fill'); progressBar.appendChild(progressBarFill); const remainingTimeSpan = document.createElement('span'); remainingTimeSpan.classList.add('remaining-time'); remainingTimeSpan.textContent = 'Calculating...'; container.appendChild(progressBar); container.appendChild(remainingTimeSpan); return container; }
 
         // --- Idea Box Functions ---
-        // *** MODIFIED createIdeaTaskElement to fix delete ***
         function createIdeaTaskElement(ideaTaskData) {
             const { id, text } = ideaTaskData;
             const task = document.createElement('div');
             task.classList.add('idea-task');
             task.setAttribute('draggable', 'true');
-            task.id = `idea-${id}`;
-            task.dataset.id = id;
+            task.id = `idea-${id}`; // Use Firestore ID from data
+            task.dataset.id = id; // Store Firestore ID
             task.dataset.text = text;
             task.dataset.type = 'idea-task';
             const textSpan = document.createElement('span');
@@ -455,13 +552,16 @@
             // Attach the event listener correctly
             deleteBtn.addEventListener('click', async (event) => {
                 event.stopPropagation(); // Prevent other listeners if needed
-                console.log(`DEBUG: Delete button clicked for idea ID: ${id}, Text: "${text}"`);
-                if (confirm(`Are you sure you want to delete idea: "${text}"?`)) {
+                 // Retrieve the ID directly from the element's dataset when clicked
+                 const taskIdToDelete = task.dataset.id;
+                console.log(`DEBUG: Delete button clicked for idea ID: ${taskIdToDelete}, Text: "${task.dataset.text}"`);
+
+                if (confirm(`Are you sure you want to delete idea: "${task.dataset.text}"?`)) {
                     deleteBtn.disabled = true; // Disable button
                     try {
-                        console.log(`DEBUG: Calling deleteIdeaTaskFromFirestore for ID: ${id}`);
-                        await deleteIdeaTaskFromFirestore(id); // Call the Firestore delete function
-                        console.log(`DEBUG: Firestore delete successful for ID: ${id}. Removing element.`);
+                        console.log(`DEBUG: Calling deleteIdeaTaskFromFirestore for ID: ${taskIdToDelete}`);
+                        await deleteIdeaTaskFromFirestore(taskIdToDelete); // Call the Firestore delete function
+                        console.log(`DEBUG: Firestore delete successful for ID: ${taskIdToDelete}. Removing element.`);
                         task.remove(); // Remove the element from the DOM on success
                     } catch (error) {
                         deleteBtn.disabled = false; // Re-enable on error
@@ -478,7 +578,7 @@
             task.addEventListener('dragend', handleDragEnd);
             return task;
         }
-        // *** END MODIFIED createIdeaTaskElement ***
+
 
         async function displayIdeaTasks() {
             if (!ideaTaskList) return;
@@ -496,7 +596,7 @@
                  }
             }
         }
-        // *** REFINED addIdeaTask function with DEBUG LOGGING ***
+
         async function addIdeaTask() {
             console.log("DEBUG: addIdeaTask called"); // Log start
             if (!ideaTaskInput || !addIdeaTaskBtn) { console.error("DEBUG: Idea task input or button not found."); return; }
@@ -512,7 +612,8 @@
                 console.log("DEBUG: Back from addIdeaTaskToFirestore. ID:", newId); // Will log ID if successful
 
                 // This block only runs if addIdeaTaskToFirestore doesn't throw an error
-                const newTaskData = { id: newId, text: taskText, createdAt: new Date() };
+                 // Create data object including the new ID received from Firestore
+                const newTaskData = { id: newId, text: taskText, createdAt: new Date() }; // Use actual ID
                 const newTaskElement = createIdeaTaskElement(newTaskData);
                 const placeholder = ideaTaskList.querySelector('p');
                 if (placeholder) placeholder.remove();
@@ -532,7 +633,7 @@
                 ideaTaskInput.focus();
             }
         }
-        // *** END REFINED addIdeaTask function ***
+
 
         // --- Edit Mode Functions (Daily Tasks) ---
         function enterEditMode(taskElement) { if (taskElement.classList.contains('editing')) return; taskElement.classList.add('editing'); taskElement.setAttribute('draggable', 'false'); const displayContent = taskElement.querySelector('.task-content-display'); if (displayContent) displayContent.style.display = 'none'; const progressContainer = taskElement.querySelector('.task-progress-container'); if (progressContainer) progressContainer.style.display = 'none'; const editForm = document.createElement('div'); editForm.classList.add('task-edit-form'); const textInput = document.createElement('input'); textInput.type = 'text'; textInput.value = taskElement.dataset.text || ''; textInput.placeholder = 'Task description'; const timeInputsDiv = document.createElement('div'); timeInputsDiv.classList.add('edit-time-inputs'); const startTimeDiv = document.createElement('div'); const startTimeInput = document.createElement('input'); startTimeInput.type = 'time'; startTimeInput.value = taskElement.dataset.startTime || ''; startTimeDiv.appendChild(startTimeInput); const endTimeDiv = document.createElement('div'); const endTimeInput = document.createElement('input'); endTimeInput.type = 'time'; endTimeInput.value = taskElement.dataset.endTime || ''; endTimeDiv.appendChild(endTimeInput); timeInputsDiv.appendChild(startTimeDiv); timeInputsDiv.appendChild(endTimeDiv); const buttonsDiv = document.createElement('div'); buttonsDiv.classList.add('edit-buttons'); const saveBtn = document.createElement('button'); saveBtn.textContent = 'Save'; saveBtn.classList.add('edit-save-btn'); saveBtn.onclick = () => saveEdit(taskElement, textInput, startTimeInput, endTimeInput); const cancelBtn = document.createElement('button'); cancelBtn.textContent = 'Cancel'; cancelBtn.classList.add('edit-cancel-btn'); cancelBtn.onclick = () => cancelEdit(taskElement); buttonsDiv.appendChild(saveBtn); buttonsDiv.appendChild(cancelBtn); editForm.appendChild(textInput); editForm.appendChild(timeInputsDiv); editForm.appendChild(buttonsDiv); taskElement.appendChild(editForm); textInput.focus(); }
@@ -541,31 +642,121 @@
         function cancelEdit(taskElement) { exitEditMode(taskElement); console.log("Task edit cancelled:", taskElement.id); }
 
         // --- Daily Task Board Functions ---
-        // *** MODIFIED displayTasksForDate to hide error message ***
+         // Function to display tasks for a specific date
         async function displayTasksForDate(dateString) {
-            if (!db) { selectedDateDisplay.textContent = "Database not connected."; return; }
+            if (!db) {
+                selectedDateDisplay.textContent = "Database not connected.";
+                return;
+            }
             currentSelectedDate = dateString;
             const formattedDate = formatDisplayDate(dateString); // Format date once
             selectedDateDisplay.textContent = `Loading tasks for ${formattedDate}...`;
             if (dateSelector) dateSelector.value = dateString;
-            clearBoard();
+            clearBoard(); // Clear existing tasks from the board
+
             try {
-                const tasksForDay = await loadTasksFromFirestore(dateString); // Can throw error
-                selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate}`; // Update only on success
-                Object.keys(tasksForDay).forEach(columnId => { const columnElement = document.getElementById(columnId); const tasksContainer = columnElement?.querySelector('.tasks-container'); if (tasksContainer) { tasksForDay[columnId].forEach(taskData => { const taskElement = createTaskElement(taskData, columnId); tasksContainer.appendChild(taskElement); }); } else { console.warn(`Tasks container not found in column "${columnId}".`); } });
-                checkAndMoveTasks();
-                updateInProgressTimers();
-            } catch (error) {
-                console.error("Error caught by displayTasksForDate:", error);
-                // Update display but OMIT the error text
+                // Load tasks using the potentially modified loadTasksFromFirestore
+                const tasksForDay = await loadTasksFromFirestore(dateString);
+
+                // Update display only on successful load
                 selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate}`;
-                // Alert might have already happened in loadTasks, console log is enough here
+
+                // Populate columns
+                Object.keys(tasksForDay).forEach(columnId => {
+                    const columnElement = document.getElementById(columnId);
+                    const tasksContainer = columnElement?.querySelector('.tasks-container');
+                    if (tasksContainer) {
+                        // Clear previous tasks in this specific container before adding new ones
+                        // This might be redundant if clearBoard() already does it, but ensures clean state
+                        // tasksContainer.innerHTML = '';
+                        tasksForDay[columnId].forEach(taskData => {
+                            const taskElement = createTaskElement(taskData, columnId);
+                            tasksContainer.appendChild(taskElement);
+                        });
+                    } else {
+                        console.warn(`Tasks container not found in column "${columnId}".`);
+                    }
+                });
+
+                checkAndMoveTasks(); // Check if any tasks need moving based on time
+                updateInProgressTimers(); // Update timers for tasks in progress
+
+            } catch (error) {
+                // Error is now logged in detail within loadTasksFromFirestore
+                console.error("Error caught by displayTasksForDate:", error);
+                // Update display to show the date, but indicate failure (alert already shown)
+                selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate} (Load Failed)`;
+                // Do not proceed with checkAndMoveTasks or updateInProgressTimers if load failed
             }
         }
-        // *** END MODIFIED displayTasksForDate ***
 
-        async function saveCurrentBoardState() { if (!db || !hustleTasksCollection) { console.error("Firestore 'hustle_tasks' collection not initialized."); return; } if (!currentSelectedDate) { console.log("No date selected, cannot save daily state."); return; } const tasksForCurrentDate = { todo: [], inprogress: [], done: [] }; columns.forEach(column => { const columnId = column.id; const tasksContainer = column.querySelector('.tasks-container'); if (tasksForCurrentDate.hasOwnProperty(columnId) && tasksContainer) { tasksContainer.querySelectorAll('.kanban-task').forEach(task => { if (task.classList.contains('editing')) { console.warn("Skipping save for task in edit mode:", task.id); return; } const taskData = { text: task.dataset.text || '', startTime: task.dataset.startTime || null, endTime: task.dataset.endTime || null, completionDate: task.dataset.completionDate || null }; if (taskData.text) { tasksForCurrentDate[columnId].push(taskData); } else { console.warn("Skipping saving daily task with no text:", task.id); } }); } else if (!tasksContainer) { console.warn(`Tasks container not found in column "${columnId}" during save.`);} }); await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate); }
-        async function addTask() { if (!db || !hustleTasksCollection) { alert("Database not connected. Cannot add task."); return; } const taskInput = document.getElementById('new-task-input'); const startTimeInput = document.getElementById('new-task-start-time'); const endTimeInput = document.getElementById('new-task-end-time'); const todoColumn = document.getElementById('todo'); const todoTasksContainer = todoColumn?.querySelector('.tasks-container'); if (!taskInput || !startTimeInput || !endTimeInput || !todoTasksContainer) { console.error("Error: Daily task form/column elements not found."); alert("Error: Could not find necessary form elements."); return; } const taskText = taskInput.value.trim(); const startTime = startTimeInput.value; const endTime = endTimeInput.value; if (taskText === '') { alert('Please enter a task description.'); taskInput.focus(); return; } if (!startTime) { alert('Please enter a start time.'); startTimeInput.focus(); return; } if (!endTime) { alert('Please enter an end time.'); endTimeInput.focus(); return; } if (startTime >= endTime) { alert('End time must be after start time.'); endTimeInput.focus(); return; } if (!currentSelectedDate) { alert('Please select a date first.'); return; } const newTaskData = { text: taskText, startTime: startTime, endTime: endTime, completionDate: null }; const newTaskElement = createTaskElement(newTaskData, 'todo'); if (newTaskElement) { todoTasksContainer.appendChild(newTaskElement); } else { console.error("Error creating daily task element."); alert("Error: Could not create the task visually."); return; } taskInput.value = ''; startTimeInput.value = ''; endTimeInput.value = ''; await saveCurrentBoardState(); console.log(`Daily task added and saved for "${taskText}"`); checkAndMoveTasks(); }
+        async function saveCurrentBoardState() {
+             if (!db || !hustleTasksCollection) { console.error("Firestore 'hustle_tasks' collection not initialized."); return; }
+             if (!currentSelectedDate) { console.log("No date selected, cannot save daily state."); return; }
+             const tasksForCurrentDate = { todo: [], inprogress: [], done: [] };
+             columns.forEach(column => {
+                 const columnId = column.id;
+                 const tasksContainer = column.querySelector('.tasks-container');
+                 if (tasksForCurrentDate.hasOwnProperty(columnId) && tasksContainer) {
+                     tasksContainer.querySelectorAll('.kanban-task').forEach(task => {
+                         if (task.classList.contains('editing')) {
+                             console.warn("Skipping save for task in edit mode:", task.id);
+                             return; // Don't save task being edited
+                         }
+                         const taskData = {
+                             text: task.dataset.text || '',
+                             startTime: task.dataset.startTime || null,
+                             endTime: task.dataset.endTime || null,
+                             // Retrieve completion date carefully
+                             completionDate: task.dataset.completionDate && task.dataset.completionDate !== 'null' ? task.dataset.completionDate : null
+                         };
+                         // Only save tasks that have text content
+                         if (taskData.text) {
+                             tasksForCurrentDate[columnId].push(taskData);
+                         } else {
+                             console.warn("Skipping saving daily task with no text:", task.id);
+                         }
+                     });
+                 } else if (!tasksContainer) {
+                     console.warn(`Tasks container not found in column "${columnId}" during save.`);
+                 }
+             });
+
+             // Call the potentially modified save function
+             await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate);
+         }
+
+        async function addTask() {
+            if (!db || !hustleTasksCollection) { alert("Database not connected. Cannot add task."); return; }
+            const taskInput = document.getElementById('new-task-input');
+            const startTimeInput = document.getElementById('new-task-start-time');
+            const endTimeInput = document.getElementById('new-task-end-time');
+            const todoColumn = document.getElementById('todo');
+            const todoTasksContainer = todoColumn?.querySelector('.tasks-container');
+            if (!taskInput || !startTimeInput || !endTimeInput || !todoTasksContainer) { console.error("Error: Daily task form/column elements not found."); alert("Error: Could not find necessary form elements."); return; }
+            const taskText = taskInput.value.trim();
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            if (taskText === '') { alert('Please enter a task description.'); taskInput.focus(); return; }
+            if (!startTime) { alert('Please enter a start time.'); startTimeInput.focus(); return; }
+            if (!endTime) { alert('Please enter an end time.'); endTimeInput.focus(); return; }
+            if (startTime >= endTime) { alert('End time must be after start time.'); endTimeInput.focus(); return; }
+            if (!currentSelectedDate) { alert('Please select a date first.'); return; }
+            const newTaskData = { text: taskText, startTime: startTime, endTime: endTime, completionDate: null };
+            const newTaskElement = createTaskElement(newTaskData, 'todo');
+            if (newTaskElement) {
+                todoTasksContainer.appendChild(newTaskElement);
+            } else {
+                console.error("Error creating daily task element.");
+                alert("Error: Could not create the task visually.");
+                return;
+            }
+            taskInput.value = ''; startTimeInput.value = ''; endTimeInput.value = '';
+            await saveCurrentBoardState(); // Save the updated board state
+            console.log(`Daily task added locally for "${taskText}", saving board state.`);
+            checkAndMoveTasks(); // Check if the new task should move immediately
+        }
+
 
         // --- Drag and Drop Event Handlers ---
         function handleDragStart(event) { if (event.target.classList.contains('kanban-task') && event.target.classList.contains('editing')) { event.preventDefault(); return; } draggedElement = event.target; draggedElementType = event.target.dataset.type; event.dataTransfer.setData('text/plain', event.target.id); event.dataTransfer.effectAllowed = "move"; setTimeout(() => { if (draggedElement) draggedElement.classList.add('dragging'); }, 0); console.log(`Drag Start: ${draggedElementType} - ${draggedElement.id}`); }
@@ -612,7 +803,13 @@
             try { await runArchivingProcess(); } catch (error) { console.error("Error during initial archiving:", error); }
 
             // Load ideas first, handle potential errors
-            try { await displayIdeaTasks(); } catch(error) { console.error("Failed initial idea task load:", error); /* Error message shown in displayIdeaTasks */ }
+             try {
+                 await displayIdeaTasks();
+             } catch(error) {
+                 // Error is logged within loadIdeaTasksFromFirestore now
+                 console.error("Failed initial idea task load (caught in DOMContentLoaded):", error);
+             }
+
 
             // Load today's tasks
             const currentBostonDate = getCurrentDateString(BOSTON_TIMEZONE);
@@ -621,10 +818,10 @@
                 try {
                     await displayTasksForDate(currentBostonDate); // Load today's tasks
                 } catch (error) {
-                    console.error("Failed initial daily task load:", error);
-                    // Error message is handled within displayTasksForDate
+                    // Error is logged within loadTasksFromFirestore and handled in displayTasksForDate
+                    console.error("Failed initial daily task load (caught in DOMContentLoaded):", error);
                 }
-                // Add listener *after* initial load attempt
+                 // Add listener *after* initial load attempt
                 dateSelector.addEventListener('change', (event) => { displayTasksForDate(event.target.value); });
             } else {
                 console.error("Date selector element not found.");
