@@ -46,7 +46,8 @@
             font-family: 'Inter', sans-serif;
             /* Consider adding a fallback background color or using a local image */
             background-image: url('https://raw.githubusercontent.com/sniting/sng-hustle-board./main/ChatGPT%20Image%20Apr%2030%2C%202025%20at%2007_19_36%20PM.png');
-            background-size: cover; background-position: center center; background-repeat: no-repeat; background-attachment: fixed;
+            background-size: cover; background-position: center center; background-repeat: no-repeat;
+            background-attachment: scroll; /* <<<< MODIFIED HERE (was fixed) */
             background-color: #374151; /* Fallback color */
             padding: 2rem 1rem 5rem 1rem; color: var(--column-header-text);
             perspective: 1800px; overflow-x: hidden; min-height: 100vh;
@@ -275,12 +276,12 @@
         // --- Firebase Configuration ---
         // Using the config provided by the user for sng-hustle-board-standalone
         const firebaseConfig = {
-          apiKey: "AIzaSyBygcOaz8etf0XycZ4ILTrUkSXD-SKhFVM", // Replace with your actual API key if needed
-          authDomain: "sng-hustle-board-standalone.firebaseapp.com",
-          projectId: "sng-hustle-board-standalone",
-          storageBucket: "sng-hustle-board-standalone.appspot.com",
-          messagingSenderId: "892064086812",
-          appId: "1:892064086812:web:4f0aeec9a6bd24c92958d9"
+         apiKey: "AIzaSyBygcOaz8etf0XycZ4ILTrUkSXD-SKhFVM", // Replace with your actual API key if needed
+         authDomain: "sng-hustle-board-standalone.firebaseapp.com",
+         projectId: "sng-hustle-board-standalone",
+         storageBucket: "sng-hustle-board-standalone.appspot.com",
+         messagingSenderId: "892064086812",
+         appId: "1:892064086812:web:4f0aeec9a6bd24c92958d9"
         };
         // --- End Firebase Configuration ---
 
@@ -489,15 +490,15 @@
             console.log(`Attempting to load daily tasks for date: ${dateString}...`);
             // Validate the date string format
             if (!dateString || typeof dateString !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-                 console.error(`Invalid dateString provided to loadTasksFromFirestore: ${dateString}`);
-                 alert(`Internal Error: Invalid date format used (${dateString}). Cannot load tasks.`);
-                 throw new Error(`Invalid dateString: ${dateString}`);
+                console.error(`Invalid dateString provided to loadTasksFromFirestore: ${dateString}`);
+                alert(`Internal Error: Invalid date format used (${dateString}). Cannot load tasks.`);
+                throw new Error(`Invalid dateString: ${dateString}`);
             }
             // Get a reference to the specific date document
             const docRef = hustleTasksCollection.doc(dateString);
 
             try {
-                console.log(`Fetching document: ${docRef.path}`);
+                console.log(`Workspaceing document: ${docRef.path}`);
                 const docSnap = await docRef.get(); // Attempt to get the document
 
                 // ******** FIX: Use docSnap.exists (property) instead of docSnap.exists() (method) ********
@@ -563,7 +564,7 @@
                  console.error("Error Message:", error.message);
                  alert(`Error saving daily tasks for ${formatDisplayDate(dateString)}. Check console for details.`);
              }
-         }
+          }
 
         /**
          * Loads all tasks from the 'hustle_ideaBoxTasks' collection, ordered by creation time.
@@ -658,9 +659,9 @@
                 console.error("DEBUG: Error deleting idea task from Firestore: ", error);
                  // Show specific alert for permission errors
                  if (error.code === 'permission-denied') {
-                    alert(`Error deleting idea task: Permission denied. Check Firestore rules allow 'delete' on hustle_ideaBoxTasks.`);
+                     alert(`Error deleting idea task: Permission denied. Check Firestore rules allow 'delete' on hustle_ideaBoxTasks.`);
                  } else {
-                    alert(`Error deleting idea task: ${error.message}. Check console.`);
+                     alert(`Error deleting idea task: ${error.message}. Check console.`);
                  }
                 throw error; // Re-throw the error
             }
@@ -868,7 +869,7 @@
                  console.error("Error displaying idea tasks:", error);
                  // Show error message in the UI if loading failed
                  if (ideaTaskList.innerHTML.includes('Loading')) { // Avoid duplicate error messages
-                    ideaTaskList.innerHTML = '<p class="text-red-400 text-center italic">Error loading ideas. Please check connection/console.</p>';
+                     ideaTaskList.innerHTML = '<p class="text-red-400 text-center italic">Error loading ideas. Please check connection/console.</p>';
                  }
             }
         }
@@ -1161,7 +1162,7 @@
 
              // Call the function to save the structured data to Firestore
              await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate);
-         }
+        }
 
         /**
          * Handles adding a new daily task from the form to the 'To Do' column.
@@ -1802,7 +1803,7 @@
                  const remainingSeconds = updateSingleTaskTimer(task);
                  // Check if this task triggers the need for faster updates
                  if (remainingSeconds >= 0 && remainingSeconds < 60) {
-                    isInLastMinute = true;
+                     isInLastMinute = true;
                  }
             });
 
