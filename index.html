@@ -206,11 +206,11 @@
                     <input type="text" id="new-task-input" placeholder="Define the next victory..." class="focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label for="new-task-start-time">Start:</label>
+                    <label for="new-task-start-time">Start (Optional):</label>
                     <input type="time" id="new-task-start-time" class="focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label for="new-task-end-time">End:</label>
+                    <label for="new-task-end-time">End (Optional):</label>
                     <input type="time" id="new-task-end-time" class="focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
                 </div>
                 <div>
@@ -223,17 +223,17 @@
             <div id="todo" class="kanban-column" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
                 <h2 class="text-xl mb-5">🎯 To Do</h2>
                 <div class="tasks-container">
-                    </div>
+                </div>
             </div>
             <div id="inprogress" class="kanban-column" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
                 <h2 class="text-xl mb-5">🔥 In Progress</h2>
                  <div class="tasks-container">
-                    </div>
+                </div>
             </div>
             <div id="done" class="kanban-column" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
                 <h2 class="text-xl mb-5">🏆 Done!</h2>
                  <div class="tasks-container">
-                    </div>
+                </div>
             </div>
         </div>
 
@@ -245,7 +245,7 @@
             </div>
             <div id="idea-task-list">
                 <p class="text-slate-400 text-center italic">Loading ideas...</p>
-                </div>
+            </div>
         </div>
 
         <div id="daily-summary" class="hidden"> <h3 class="text-xl font-bold">Daily Wins Recap!</h3>
@@ -497,12 +497,10 @@
             const docRef = hustleTasksCollection.doc(dateString);
 
             try {
-                console.log(`Fetching document: ${docRef.path}`);
+                console.log(`Workspaceing document: ${docRef.path}`);
                 const docSnap = await docRef.get(); // Attempt to get the document
 
-                // ******** FIX: Use docSnap.exists (property) instead of docSnap.exists() (method) ********
                 if (docSnap.exists) { // Check the boolean property for Compat SDK
-                // ***************************************************************************************
                     console.log(`Document found for ${dateString}. Data:`, docSnap.data());
                     const data = docSnap.data() || {}; // Use empty object if data is null/undefined
 
@@ -563,7 +561,7 @@
                  console.error("Error Message:", error.message);
                  alert(`Error saving daily tasks for ${formatDisplayDate(dateString)}. Check console for details.`);
              }
-          }
+         }
 
         /**
          * Loads all tasks from the 'hustle_ideaBoxTasks' collection, ordered by creation time.
@@ -729,8 +727,8 @@
             // Store task data in dataset attributes for easy access
             task.dataset.type = 'kanban-task';
             task.dataset.text = text || '';
-            if (startTime) task.dataset.startTime = startTime;
-            if (endTime) task.dataset.endTime = endTime;
+            if (startTime) task.dataset.startTime = startTime; // Only set if startTime is not null/empty
+            if (endTime) task.dataset.endTime = endTime;       // Only set if endTime is not null/empty
             if (completionDate) task.dataset.completionDate = completionDate;
 
             // Create and append the display content (text, time, etc.)
@@ -945,12 +943,12 @@
             const startTimeDiv = document.createElement('div');
             const startTimeInput = document.createElement('input');
             startTimeInput.type = 'time';
-            startTimeInput.value = taskElement.dataset.startTime || '';
+            startTimeInput.value = taskElement.dataset.startTime || ''; // Pre-fill with existing or empty
             startTimeDiv.appendChild(startTimeInput);
             const endTimeDiv = document.createElement('div');
             const endTimeInput = document.createElement('input');
             endTimeInput.type = 'time';
-            endTimeInput.value = taskElement.dataset.endTime || '';
+            endTimeInput.value = taskElement.dataset.endTime || ''; // Pre-fill with existing or empty
             endTimeDiv.appendChild(endTimeInput);
             timeInputsDiv.appendChild(startTimeDiv);
             timeInputsDiv.appendChild(endTimeDiv);
@@ -994,9 +992,9 @@
 
         // Saves the edited task data and updates the UI and Firestore
         async function saveEdit(taskElement, textInput, startTimeInput, endTimeInput) {
-            const newText = textInput.value.trim();
-            const newStartTime = startTimeInput.value;
-            const newEndTime = endTimeInput.value;
+            let newText = textInput.value.trim();
+            let newStartTime = startTimeInput.value;
+            let newEndTime = endTimeInput.value;
 
             // --- Input Validation ---
             if (newText === '') {
@@ -1004,56 +1002,81 @@
                 textInput.focus();
                 return;
             }
-            // Basic time format validation (HH:MM)
-            if (!/^\d{2}:\d{2}$/.test(newStartTime)) {
-                alert('Please enter a valid start time (HH:MM).');
-                startTimeInput.focus();
-                return;
-            }
-            if (!/^\d{2}:\d{2}$/.test(newEndTime)) {
-                alert('Please enter a valid end time (HH:MM).');
-                endTimeInput.focus();
-                return;
-            }
-            // Ensure end time is after start time
-            if (newStartTime >= newEndTime) {
-                alert('End time must be after start time.');
-                endTimeInput.focus();
-                return;
+
+            // Time validation for edit:
+            if (newStartTime || newEndTime) { // If either time field has a value
+                if (!newStartTime) {
+                    alert('Please enter a start time if providing an end time, or leave both empty.');
+                    startTimeInput.focus();
+                    return;
+                }
+                if (!newEndTime) {
+                    alert('Please enter an end time if providing a start time, or leave both empty.');
+                    endTimeInput.focus();
+                    return;
+                }
+                if (newStartTime >= newEndTime) {
+                    alert('End time must be after start time.');
+                    endTimeInput.focus();
+                    return;
+                }
+                // Times are valid and provided
+                taskElement.dataset.startTime = newStartTime;
+                taskElement.dataset.endTime = newEndTime;
+            } else {
+                // Both newStartTime and newEndTime are empty, user wants to remove time
+                delete taskElement.dataset.startTime;
+                delete taskElement.dataset.endTime;
+                // Ensure newStartTime and newEndTime are null for updatedDisplayData
+                newStartTime = null;
+                newEndTime = null;
             }
             // --- End Validation ---
 
-            // Update the task element's dataset attributes
+            // Update the task element's dataset text
             taskElement.dataset.text = newText;
-            taskElement.dataset.startTime = newStartTime;
-            taskElement.dataset.endTime = newEndTime;
-            // Preserve completion date if it exists
             const completionDate = taskElement.dataset.completionDate || null;
 
             // Update the display content within the task element
             const displayContent = taskElement.querySelector('.task-content-display');
             if (displayContent) {
-                // Clear existing content
                 while (displayContent.firstChild) {
                     displayContent.removeChild(displayContent.firstChild);
                 }
-                // Create and append new content based on updated data
                 const updatedDisplayData = { text: newText, startTime: newStartTime, endTime: newEndTime, completionDate: completionDate };
-                const newDisplay = createTaskDisplayContent(updatedDisplayData);
-                while (newDisplay.firstChild) { // Move nodes from newDisplay to displayContent
-                    displayContent.appendChild(newDisplay.firstChild);
+                const newDisplayNodes = createTaskDisplayContent(updatedDisplayData); // This returns a div
+                while (newDisplayNodes.firstChild) { // Append children of the newDisplay div
+                    displayContent.appendChild(newDisplayNodes.firstChild);
                 }
             }
 
-            // If the task is in the 'inprogress' column, update its timer immediately
+            // Handle progress bar for tasks in 'inprogress' column
             if (taskElement.closest('#inprogress')) {
-                updateSingleTaskTimer(taskElement);
+                const progressContainer = taskElement.querySelector('.task-progress-container');
+                if (newStartTime && newEndTime) { // Times are set
+                    if (!progressContainer) { // Add progress bar if it doesn't exist
+                        const newProgressElements = createProgressElements();
+                        // Append before delete button if possible, otherwise just append
+                        const deleteBtn = taskElement.querySelector('.delete-task-btn');
+                        if (deleteBtn) {
+                            taskElement.insertBefore(newProgressElements, deleteBtn);
+                        } else {
+                            taskElement.appendChild(newProgressElements);
+                        }
+                    }
+                    updateSingleTaskTimer(taskElement); // Update timer immediately
+                } else { // Times were removed
+                    if (progressContainer) {
+                        progressContainer.remove(); // Remove progress bar
+                    }
+                }
             }
 
             exitEditMode(taskElement); // Exit the editing UI
             await saveCurrentBoardState(); // Save the entire board state to Firestore
             console.log("Task edited and saved:", taskElement.id);
         }
+
 
         // Cancels the edit operation and restores the task element's original state
         function cancelEdit(taskElement) {
@@ -1142,8 +1165,8 @@
                          // Extract task data from dataset attributes
                          const taskData = {
                              text: task.dataset.text || '',
-                             startTime: task.dataset.startTime || null,
-                             endTime: task.dataset.endTime || null,
+                             startTime: task.dataset.startTime || null, // Will be null if attribute not set
+                             endTime: task.dataset.endTime || null,     // Will be null if attribute not set
                              // Retrieve completion date carefully, ensuring 'null' string isn't saved
                              completionDate: task.dataset.completionDate && task.dataset.completionDate !== 'null' ? task.dataset.completionDate : null
                          };
@@ -1161,7 +1184,7 @@
 
              // Call the function to save the structured data to Firestore
              await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate);
-        }
+         }
 
         /**
          * Handles adding a new daily task from the form to the 'To Do' column.
@@ -1184,16 +1207,45 @@
                 return;
             }
 
-            // Get and validate form input values
+            // Get form input values
             const taskText = taskInput.value.trim();
-            const startTime = startTimeInput.value;
-            const endTime = endTimeInput.value;
+            let startTime = startTimeInput.value; // Use let to potentially set to null
+            let endTime = endTimeInput.value;     // Use let to potentially set to null
 
-            if (taskText === '') { alert('Please enter a task description.'); taskInput.focus(); return; }
-            if (!startTime) { alert('Please enter a start time.'); startTimeInput.focus(); return; }
-            if (!endTime) { alert('Please enter an end time.'); endTimeInput.focus(); return; }
-            if (startTime >= endTime) { alert('End time must be after start time.'); endTimeInput.focus(); return; }
-            if (!currentSelectedDate) { alert('Please select a date first.'); return; } // Ensure a date is selected
+            if (taskText === '') {
+                alert('Please enter a task description.');
+                taskInput.focus();
+                return;
+            }
+
+            if (!currentSelectedDate) {
+                alert('Cannot add task: No date selected. Please select a date or refresh.');
+                return;
+            }
+
+            // Time validation logic
+            if (startTime || endTime) { // If either time field has a value
+                if (!startTime) {
+                    alert('Please enter a start time if providing an end time.');
+                    startTimeInput.focus();
+                    return;
+                }
+                if (!endTime) {
+                    alert('Please enter an end time if providing a start time.');
+                    endTimeInput.focus();
+                    return;
+                }
+                if (startTime >= endTime) {
+                    alert('End time must be after start time.');
+                    endTimeInput.focus();
+                    return;
+                }
+                // Times are valid and provided
+            } else {
+                // Both startTime and endTime are empty, so set them to null for data consistency
+                startTime = null;
+                endTime = null;
+            }
 
             // Create task data object
             const newTaskData = { text: taskText, startTime: startTime, endTime: endTime, completionDate: null };
@@ -1210,14 +1262,17 @@
             }
 
             // Clear the form fields
-            taskInput.value = ''; startTimeInput.value = ''; endTimeInput.value = '';
+            taskInput.value = '';
+            startTimeInput.value = ''; // Clear time inputs regardless
+            endTimeInput.value = '';   // Clear time inputs regardless
 
             // Save the updated board state to Firestore
             await saveCurrentBoardState();
             console.log(`Daily task added locally for "${taskText}", saving board state.`);
 
-            checkAndMoveTasks(); // Check if the new task should be moved immediately
+            checkAndMoveTasks(); // Check if the new task should be moved immediately (if times were provided)
         }
+
 
 
         // --- Drag and Drop Event Handlers ---
@@ -1681,11 +1736,11 @@
 
             tasksInTodo.forEach(task => {
                 if (task.classList.contains('editing')) { return; } // Skip tasks being edited
-                const taskStartTime = task.dataset.startTime;
+                const taskStartTime = task.dataset.startTime; // This will be undefined if no time was set
                 // If task has a start time and the current time is past it
                 if (taskStartTime && currentTimeStr >= taskStartTime) {
                     console.log(`Auto-moving task "${task.dataset.text}" (ID: ${task.id}) to In Progress`);
-                    // Add progress elements if not already present
+                    // Add progress elements if not already present and times exist
                     if (task.dataset.startTime && task.dataset.endTime && !task.querySelector('.task-progress-container')) {
                         task.appendChild(createProgressElements());
                     }
@@ -1794,9 +1849,9 @@
             let isInLastMinute = false; // Flag if any task has < 60s remaining
 
             tasks.forEach(task => {
-                 // Ensure progress elements exist if task should have them
+                 // Ensure progress elements exist if task should have them (has times)
                  if (task.dataset.startTime && task.dataset.endTime && !task.querySelector('.task-progress-container')) {
-                    task.appendChild(createProgressElements());
+                     task.appendChild(createProgressElements());
                  }
                  // Update the timer for this task
                  const remainingSeconds = updateSingleTaskTimer(task);
