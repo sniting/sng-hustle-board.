@@ -12,6 +12,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
+    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
@@ -1982,6 +1983,111 @@
 
             console.log("Initialization complete.");
         });
+        // Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('ServiceWorker registered with scope:', registration.scope);
+                return registration;
+            })
+            .then(registration => {
+                // Request notification permission after service worker is ready
+                return checkNotificationPermission(registration);
+            })
+            .catch(error => {
+                console.error('ServiceWorker registration failed:', error);
+            });
+    });
+}
+
+// Function to check and request notification permissions
+async function checkNotificationPermission(registration) {
+    // First check if notifications are supported
+    if (!('Notification' in window)) {
+        console.log('This browser does not support notifications');
+        return;
+    }
+    
+    if (Notification.permission === 'granted') {
+        console.log('Notification permission already granted');
+        return registration;
+    } else if (Notification.permission !== 'denied') {
+        // Ask for permission
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('Notification permission granted!');
+                return registration;
+            } else {
+                console.log('Notification permission not granted');
+            }
+        } catch (error) {
+            console.error('Error requesting notification permission:', error);
+        }
+    } else {
+        console.log('Notification permission is denied');
+    }
+}
+
+// Create a function to update notifications from tasks
+function updateTaskNotification(taskData, progressInfo) {
+    if (!('serviceWorker' in navigator) || Notification.permission !== 'granted') {
+        return;
+    }
+    
+    navigator.serviceWorker.ready.then(registration => {
+        registration.active.postMessage({
+            type: 'UPDATE_TASK_NOTIFICATION',
+            taskData: {
+                id: taskData.id || taskData.dataset?.id || Math.random().toString(36).substring(2),
+                text: taskData.text || taskData.dataset?.text || 'Task in progress',
+                progressInfo: progressInfo
+            }
+        });
+    });
+}
+
+// This will help support iOS handling of notifications
+let iOSNotificationTimeout = null;
+
+// Function to create iOS specific notifications (which work differently)
+function createiOSNotification(taskData, progressInfo) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+        return;
+    }
+    
+    // iOS requires direct notification creation rather than through service worker
+    const taskText = taskData.text || taskData.dataset?.text || 'Task in progress';
+    const taskId = taskData.id || taskData.dataset?.id || Math.random().toString(36).substring(2);
+    
+    // Clear any previous notification timeout
+    if (iOSNotificationTimeout) {
+        clearTimeout(iOSNotificationTimeout);
+    }
+    
+    // Create the notification
+    const notification = new Notification('Task in Progress', {
+        body: `${taskText}\n${progressInfo || ''}`,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: `task-${taskId}`, // Use tag to replace existing notification
+        renotify: true
+    });
+    
+    // iOS requires we keep the notification visible for a while
+    iOSNotificationTimeout = setTimeout(() => {
+        notification.close();
+    }, 30000); // Close after 30 seconds
+    
+    notification.onclick = function() {
+        window.focus();
+        this.close();
+    };
+}
+
+// Detect iOS for special handling
+const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     </script>
 
 </body>
