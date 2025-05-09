@@ -17,10 +17,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
 
-    <link rel="manifest" href="manifest.json"> <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SNG Board">
-    <link rel="apple-touch-icon" href="icon-192.png"> <meta name="theme-color" content="#f97316">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#f97316">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com;">
+
 
     <style>
         /* --- CSS Styles --- */
@@ -319,6 +323,12 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
+
+    <script>
+     if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+     }
+    </script>
 
     <div id="main-content-wrapper">
 
@@ -1218,6 +1228,12 @@
                     if (progressContainer) {
                         progressContainer.remove(); // Remove progress bar
                     }
+                     // Also remove task-with-notification class and any badge
+                     taskElement.classList.remove('task-with-notification');
+                     const badge = taskElement.querySelector('.notification-badge');
+                     if (badge) badge.remove();
+                     // Reset last notified percentage
+                     delete taskElement.dataset.lastNotifiedPercentage;
                 }
             }
 
@@ -1472,7 +1488,7 @@
                 event.dataTransfer.dropEffect = "none"; // Indicate dropping is not allowed
                 return;
             }
-            // Prevent dropping idea tasks onto 'In Progress' or 'Done' columns
+            // Prevent invalid drops (idea task to wrong column, dropping onto self)
             if (draggedElementType === 'idea-task' && targetColumn && (targetColumn.id === 'inprogress' || targetColumn.id === 'done')) {
                 event.dataTransfer.dropEffect = "none";
                 return;
@@ -2104,6 +2120,36 @@
                      let needsNotification = false;
                      let notificationText = '';
 
+                     // Add/Update badge based on progress
+                     let badge = taskElement.querySelector('.notification-badge');
+                     if (badge) {
+                         if (remainingSecondsTotal < 60 && remainingSecondsTotal > 0) {
+                             badge.textContent = `${remainingSecondsTotal}s`;
+                             badge.style.fontSize = '10px'; // Smaller font for seconds
+                         } else if (remainingSecondsTotal >= 60) {
+                             badge.textContent = `${Math.ceil(remainingSecondsTotal / 60)}m`;
+                              badge.style.fontSize = ''; // Reset font size for minutes
+                         } else { // Time up
+                             badge.remove();
+                         }
+                         badge.style.display = 'flex'; // Ensure badge is visible
+                     } else if (remainingSecondsTotal > 0 && taskElement.closest('#inprogress')) {
+                         // If badge doesn't exist but should (task in progress with time), create it
+                          badge = document.createElement('div');
+                          badge.classList.add('notification-badge');
+                          taskElement.appendChild(badge);
+                          if (remainingSecondsTotal < 60) {
+                              badge.textContent = `${remainingSecondsTotal}s`;
+                              badge.style.fontSize = '10px';
+                          } else {
+                              badge.textContent = `${Math.ceil(remainingSecondsTotal / 60)}m`;
+                          }
+                          badge.style.display = 'flex';
+                          taskElement.classList.add('task-with-notification'); // Add pulse class if not present
+                     }
+
+
+                     // Periodic notifications based on percentage
                      if (currentTimePercentage >= 99 && lastNotifiedPercentage < 99) {
                         needsNotification = true;
                         notificationText = `Almost Done!\nLess than a minute left for "${taskText}".`;
@@ -2117,6 +2163,7 @@
                          needsNotification = true;
                          notificationText = `25% Progress!\nGreat start on "${taskText}".`;
                      }
+
 
                      if (needsNotification) {
                          console.log(`Sending progress notification for task ${taskElement.id}: ${notificationText}`);
@@ -2136,7 +2183,7 @@
 
 
                  } else if (remainingSecondsTotal < 0 && currentSelectedDate === todayDateStr) {
-                     // Task is overdue and it's today - potentially remove notification class/badge?
+                     // Task is overdue and it's today - remove notification class/badge and reset percentage
                      taskElement.classList.remove('task-with-notification');
                       const badge = taskElement.querySelector('.notification-badge');
                       if (badge) badge.remove();
@@ -2172,6 +2219,7 @@
 
             const tasks = tasksContainer.querySelectorAll('.kanban-task');
             let isInLastMinute = false; // Flag if any task has < 60s remaining
+             let hasActiveTimers = false; // Flag if any task has valid times and is in progress today
 
             tasks.forEach(task => {
                  // Ensure progress elements exist if task should have them (has times)
@@ -2179,6 +2227,8 @@
                      if (!task.querySelector('.task-progress-container')) {
                          task.appendChild(createProgressElements());
                      }
+                     hasActiveTimers = true; // At least one task has times
+
                  } else {
                     // Remove progress elements if times are missing but elements exist
                     const progressContainer = task.querySelector('.task-progress-container');
@@ -2203,20 +2253,39 @@
             // Adjust update interval based on whether any task is in its last minute
             if (isInLastMinute && !lastMinuteIntervalId) {
                 // Switch to faster (1-second) updates
+                console.log("Switching to 1s timer interval.");
                 clearInterval(progressTimerIntervalId); // Clear the slower interval
                 progressTimerIntervalId = null;
+                if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId); // Clear existing faster if any
                 lastMinuteIntervalId = setInterval(updateInProgressTimers, LAST_MINUTE_INTERVAL);
-                console.log("Starting last minute timer interval (1s).");
+
             } else if (!isInLastMinute && lastMinuteIntervalId) {
                 // Switch back to slower updates if no tasks are in the last minute
+                 console.log("Switching to 15s timer interval.");
                 clearInterval(lastMinuteIntervalId); // Clear the faster interval
                 lastMinuteIntervalId = null;
                 // Restart the regular interval only if it's not already running
-                if (!progressTimerIntervalId) {
-                    progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
-                    console.log("Stopping last minute timer, restarting regular interval (15s).");
-                }
+                 if (hasActiveTimers && !progressTimerIntervalId) { // Only restart if there are tasks with timers
+                     progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
+                 } else if (!hasActiveTimers && progressTimerIntervalId) {
+                      // If no tasks with timers exist, and the regular interval is somehow still running, clear it.
+                      clearInterval(progressTimerIntervalId);
+                      progressTimerIntervalId = null;
+                 }
+            } else if (hasActiveTimers && !progressTimerIntervalId && !lastMinuteIntervalId) {
+                 // If there are tasks with timers, but no interval is running (e.g., after initial load)
+                 console.log("Starting initial 15s timer interval.");
+                 progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
+            } else if (!hasActiveTimers && (progressTimerIntervalId || lastMinuteIntervalId)) {
+                 // If there are no tasks with timers, but an interval is running, clear it.
+                 console.log("No active timers, clearing intervals.");
+                 if (progressTimerIntervalId) clearInterval(progressTimerIntervalId);
+                 progressTimerIntervalId = null;
+                 if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId);
+                 lastMinuteIntervalId = null;
             }
+             // Update wake lock state based on whether there are *any* in-progress tasks with times
+             updateWakeLockBasedOnActiveTasks();
         }
 
 
@@ -2307,7 +2376,7 @@
 
             if (Notification.permission === 'granted') {
                 console.log('Notification permission already granted');
-                // If already granted on iOS, activate wake lock
+                // If already granted on Apple device, activate wake lock
                  if (isAppleDevice) {
                      updateWakeLockBasedOnActiveTasks();
                  }
@@ -2328,8 +2397,15 @@
              const tasksContainer = inProgressColumn?.querySelector('.tasks-container');
              const activeTasks = tasksContainer?.querySelectorAll('.kanban-task') || [];
 
-             if (activeTasks.length === 0) {
-                 console.log('No active tasks, skipping wake lock enable.');
+             // Only enable wake lock if there are active tasks with times today
+             const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
+             const tasksWithTimersTodayInProgress = Array.from(activeTasks).filter(task =>
+                 task.dataset.startTime && task.dataset.endTime && currentSelectedDate === todayDateStr
+             );
+
+
+             if (tasksWithTimersTodayInProgress.length === 0) {
+                 console.log('No active tasks with timers for today, skipping wake lock enable.');
                  return;
              }
 
@@ -2343,12 +2419,18 @@
                  video.setAttribute('playsinline', '');
                  video.setAttribute('muted', '');
                  video.setAttribute('loop', '');
-                 video.style.display = 'none'; // Keep it hidden
+                 video.style.position = 'absolute'; // Use absolute positioning
+                 video.style.width = '1px';
+                 video.style.height = '1px';
+                 video.style.left = '-9999px';
+                 video.style.opacity = '0.01';
+                 video.style.display = 'block'; // Needs to be block to potentially load/play
+
 
                  const source = document.createElement('source');
                  // This should be a tiny silent MP4 file - using a data URL here (ensure this is valid and works)
                  // You might need to replace this data URL with a small, actual silent video file hosted locally.
-                 source.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAs1tZGF0AAACrgYF//+q3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0OCByMjYwMSBhMGNkN2QzIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNSAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPDEwIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAD2WIhAA3//728P4FNjuZQQAAAu5tb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAZAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACGHRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAgAAAAIAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAGQAAAAAAAEAAAAAAZBtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAACgAAAAEAFXEAAAAAAAtaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAE7bWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAA+3N0YmwAAACXc3RzZAAAAAAAAAABAAAAh2F2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAgACAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAxYXZjQwFkAAr/4QAYZ2QACqzZX4iIhAAAAwAEAAADAFA8SJZYAQAGaOvjyyLAAAAAGHN0dHMAAAAAAAAAAQAAAAEAAAQAAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAABAAAAAQAAABRzdHN6AAAAAAAAAsUAAAABAAAAFHN0Y28AAAAAAAAAAQAAADAAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjU2LjQwLjEwMQ==';
+                 source.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAs1tZGF0AAACrgYF//+q3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0OCByMjYwMSBhMGNkN2QzIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNSAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPDEwIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAD2WIhAA3//728P4FNjuZQQAAAu5tb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAZAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACGHRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAgAAAAIAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAGQAAAAAAAEAAAAAAZBtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAACgAAAAEAFXEAAAAAAAtaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAE7bWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAA+3N0bGwAAACXc3RzZAAAAAAAAAABAAAAh2F2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAgACAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAxYXZjQwFkAAr/4QAYZ2QACqzZX4iIhAAAAwAEAAADAFA8SJZYAQAGaOvjyyLAAAAAGHN0dHMAAAAAAAAAAQAAAAEAAAQAAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAABAAAAAQAAABRzdHN6AAAAAAAAAsUAAAABAAAAFHN0Y28AAAAAAAAAAQAAADAAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjU2LjQwLjEwMQ==';
                  source.type = 'video/mp4';
                  video.appendChild(source);
                  document.body.appendChild(video);
@@ -2410,8 +2492,15 @@
 
             const activeTasks = tasksContainer.querySelectorAll('.kanban-task');
 
-            // Enable wake lock if there are tasks in 'In Progress' AND the page is visible
-            if (activeTasks.length > 0) {
+             // Check for active tasks with timers for today
+             const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
+             const tasksWithTimersTodayInProgress = Array.from(activeTasks).filter(task =>
+                 task.dataset.startTime && task.dataset.endTime && currentSelectedDate === todayDateStr
+             );
+
+
+            // Enable wake lock if there are tasks with timers in 'In Progress' for today AND the page is visible
+            if (tasksWithTimersTodayInProgress.length > 0) {
                 enableWakeLock();
             } else {
                 disableWakeLock();
@@ -2636,6 +2725,67 @@
              }
             // --- End iOS Add to Home Screen Tip ---
 
+            // --- Add a test button to the page ---
+            const testButton = document.createElement('button');
+            testButton.innerText = 'Test Notification';
+            testButton.style.position = 'fixed';
+            testButton.style.top = '10px';
+            testButton.style.right = '10px';
+            testButton.style.zIndex = '9999';
+            testButton.style.backgroundColor = '#dc2626';
+            testButton.style.color = 'white';
+            testButton.style.padding = '8px 16px';
+            testButton.style.borderRadius = '4px';
+            testButton.style.border = 'none';
+            testButton.style.cursor = 'pointer';
+
+            testButton.addEventListener('click', function() {
+                // Request permission if needed
+                if (Notification.permission !== 'granted') {
+                    Notification.requestPermission().then(function(permission) {
+                        if (permission === 'granted') {
+                            testNotification();
+                        }
+                    });
+                } else {
+                    testNotification();
+                }
+            });
+
+            function testNotification() {
+                // Try direct notification
+                try {
+                    const notification = new Notification('Test Notification', {
+                        body: 'This is a direct notification test',
+                        icon: './icon-192.png' // Use relative path assuming icon is in the same directory
+                    });
+
+                    console.log('Direct notification created:', notification);
+                } catch (error) {
+                    console.error('Error creating direct notification:', error);
+                    alert('Error creating notification: ' + error.message);
+                }
+
+                // Try service worker notification if available
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'UPDATE_TASK_NOTIFICATION',
+                        taskData: {
+                            id: 'test-' + Date.now(),
+                            text: 'Test Task',
+                            progressInfo: 'Testing service worker notification'
+                        }
+                    });
+                    console.log('Service worker notification message sent');
+                } else {
+                    console.warn('No active service worker to send notification to');
+                }
+            }
+
+             // Append the test button to the body
+             document.body.appendChild(testButton);
+            // --- End Test Button ---
+
 
             // --- Start Background Intervals ---
             // Start interval to check for tasks whose start time has passed
@@ -2648,8 +2798,8 @@
             if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId); // Clear existing if any
             // Initial call to set up timers based on loaded tasks and potentially start faster interval
             updateInProgressTimers();
-            // Start the general timer update interval
-            if (!progressTimerIntervalId && !lastMinuteIntervalId) { // Only start if no timer interval is active
+            // Start the general timer update interval only if no timer interval is active
+            if (!progressTimerIntervalId && !lastMinuteIntervalId) {
                  progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
                  console.log(`Started regular progress timer interval (${TIMER_UPDATE_INTERVAL / 1000}s). ID: ${progressTimerIntervalId}`);
             }
@@ -2658,24 +2808,58 @@
             console.log("Initialization complete.");
         });
 
-        // Service Worker Registration (kept at the end, outside DOMContentLoaded, as recommended)
+        // Service Worker Registration (kept outside DOMContentLoaded, as recommended)
         // This ensures it tries to register as soon as the script is parsed
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registered with scope:', registration.scope);
-                        // checkNotificationPermission is called by the modal logic or on load if permission is granted
-                        // checkNotificationPermission(registration); // No need to call here, modal/load handles it
-                    })
-                    .catch(error => {
-                        console.error('ServiceWorker registration failed:', error);
-                         // Display a prominent error message if SW fails
-                         const swErrorDiv = document.createElement('div');
-                         swErrorDiv.textContent = "WARNING: Could not register Service Worker (Offline/Notification features may be limited). Check console logs.";
-                         swErrorDiv.style.cssText = 'background-color: #facc15; color: #1f2937; padding: 10px; text-align: center; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 10000; font-weight: bold;';
-                         document.body.appendChild(swErrorDiv);
-                    });
+                // Log service worker status
+                if (navigator.serviceWorker.controller) {
+                    console.log('Service Worker is already controlling this page');
+                } else {
+                    console.log('No Service Worker is controlling this page yet');
+                }
+
+                // Determine base path for GitHub Pages
+                const isGitHubPages = window.location.hostname.includes('github.io');
+                const repoName = 'sng-hustle-board'; // Your actual repo name
+                const basePath = isGitHubPages ? `/${repoName}/` : '/';
+
+                console.log('Attempting to register service worker from path:', basePath + 'service-worker.js');
+                console.log('With scope:', basePath);
+
+                navigator.serviceWorker.register(basePath + 'service-worker.js', {
+                    scope: basePath
+                })
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope:', registration.scope);
+
+                    // Check service worker state
+                    if (registration.installing) {
+                        console.log('Service worker installing');
+                    } else if (registration.waiting) {
+                        console.log('Service worker installed but waiting');
+                    } else if (registration.active) {
+                        console.log('Service worker active');
+                    }
+
+                    // Clear any error messages
+                    const errorBanner = document.querySelector('[style*="WARNING"]');
+                    if (errorBanner) errorBanner.remove();
+
+                    // Verify notification permission
+                    console.log('Current notification permission:', Notification.permission);
+                })
+                .catch(error => {
+                    console.error('ServiceWorker registration failed:', error);
+                    console.error('Error name:', error.name);
+                    console.error('Error message:', error.message);
+                    console.error('Error stack:', error.stack);
+                    // Display a prominent error message if SW fails
+                     const swErrorDiv = document.createElement('div');
+                     swErrorDiv.textContent = `WARNING: Could not register Service Worker (Offline/Notification features may be limited). Error: ${error.message}. Check console logs.`;
+                     swErrorDiv.style.cssText = 'background-color: #facc15; color: #1f2937; padding: 10px; text-align: center; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 10000; font-weight: bold;';
+                     document.body.appendChild(swErrorDiv);
+                });
             });
         }
 
