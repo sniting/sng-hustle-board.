@@ -4,10 +4,8 @@
   "description": "A Kanban-style board to plan and conquer your daily hustle.",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "
-#111827",
-  "theme_color": "
-#f97316",
+  "background_color": "#111827",
+  "theme_color": "#f97316",
   "orientation": "any",
   "icons": [
     {
