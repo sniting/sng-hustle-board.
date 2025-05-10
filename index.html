@@ -12,18 +12,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json"> <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SNG Board">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="theme-color" content="#f97316">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com;">
-
+    <link rel="apple-touch-icon" href="icon-192.png"> <meta name="theme-color" content="#f97316">
 
     <style>
         /* --- CSS Styles --- */
@@ -118,8 +114,8 @@
         #date-selector { padding: 0.6rem 0.8rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.1); cursor: pointer; background-color: rgba(30, 41, 59, 0.7); color: #ffffff; font-weight: 500; }
 
         /* Add Task Form Container Styling */
-        #add-task-form-container { background-color: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 1.75rem; border-radius: 0.75rem; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); transform: rotateX(1deg) rotateY(1deg); margin-bottom: 2.5rem; }
-        #add-task-form-container:hover { transform: rotateX(0deg) rotateY(0deg) scale(1.02) translateZ(15px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); }
+         #add-task-form-container { background-color: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 1.75rem; border-radius: 0.75rem; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); transform: rotateX(1deg) rotateY(1deg); margin-bottom: 2.5rem; }
+         #add-task-form-container:hover { transform: rotateX(0deg) rotateY(0deg) scale(1.02) translateZ(15px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); }
         #add-task-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; align-items: end; }
         #add-task-form > div:nth-child(1) { grid-column: span 2; }
         #add-task-form > div:nth-child(4) { grid-column: span 2; margin-top: 0.5rem; }
@@ -185,149 +181,9 @@
         #modal-cancel-btn { background-color: var(--button-cancel-bg); color: white; }
         #modal-cancel-btn:hover { background-color: var(--button-cancel-hover); transform: scale(1.03); }
 
-        /* ---- Notification System Styles ---- */
-        .notification-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #ef4444;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-        }
-
-        /* Animation for tasks with active notifications */
-        @keyframes notification-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        .task-with-notification {
-            position: relative;
-            animation: notification-pulse 2s infinite;
-        }
-
-        /* iOS-specific styles */
-        .ios-device .kanban-column {
-            /* Slightly adjust visuals for iOS */
-            transform: rotateX(1deg) rotateY(-0.5deg);
-        }
-
-        .ios-device .kanban-column:hover {
-            transform: rotateX(0deg) rotateY(0deg) scale(1.02) translateZ(15px);
-        }
-
-        .ios-device .task-just-moved {
-            /* Enhanced notification styling for iOS */
-            background-color: rgba(250, 204, 21, 0.4);
-            animation: highlight-fade 2.5s ease-out, notification-pulse 2s 2;
-        }
-
-        /* Modal for notification permission prompt */
-        #notification-permission-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10010;
-        }
-
-        #notification-permission-modal.active {
-            display: flex;
-        }
-
-        #notification-permission-modal .modal-content {
-            background-color: var(--modal-content-bg);
-            padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-            width: 90%;
-            max-width: 400px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            text-align: center;
-        }
-
-        #notification-permission-modal h3 {
-            color: #e0f2fe;
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
-        }
-
-        #notification-permission-modal p {
-            color: #cbd5e1;
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
-        }
-
-        #notification-permission-modal .permission-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        #notification-permission-modal button {
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.5rem;
-            font-weight: 700;
-            transition: all 0.2s ease;
-            border: none;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-
-        #notification-permission-modal .allow-btn {
-            background-color: var(--button-secondary-bg);
-            color: white;
-        }
-
-        #notification-permission-modal .allow-btn:hover {
-            background-color: var(--button-secondary-hover);
-            transform: scale(1.03);
-        }
-
-        #notification-permission-modal .later-btn {
-            background-color: var(--button-cancel-bg);
-            color: white;
-        }
-
-        #notification-permission-modal .later-btn:hover {
-            background-color: var(--button-cancel-hover);
-            transform: scale(1.03);
-        }
-
-        /* iOS Wake Lock Video */
-        #wake-lock-video {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            left: -9999px;
-            opacity: 0.01;
-        }
     </style>
 </head>
 <body class="p-4 md:p-8">
-
-    <script>
-     if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-       location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
-     }
-    </script>
 
     <div id="main-content-wrapper">
 
@@ -415,28 +271,16 @@
             </div>
         </div>
     </div>
-
-    <div id="notification-permission-modal">
-        <div class="modal-content">
-            <h3>📱 Enable Task Notifications</h3>
-            <p>Would you like to receive notifications when tasks start or when they're about to finish? This helps you keep track of your schedule throughout the day.</p>
-            <div class="permission-buttons">
-                <button id="allow-notifications-btn" class="allow-btn">Allow</button>
-                <button id="later-notifications-btn" class="later-btn">Maybe Later</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // --- Firebase Configuration ---
         // Using the config provided by the user for sng-hustle-board-standalone
         const firebaseConfig = {
-          apiKey: "AIzaSyBygcOaz8etf0XycZ4ILTrUkSXD-SKhFVM", // Replace with your actual API key if needed
-          authDomain: "sng-hustle-board-standalone.firebaseapp.com",
-          projectId: "sng-hustle-board-standalone",
-          storageBucket: "sng-hustle-board-standalone.appspot.com",
-          messagingSenderId: "892064086812",
-          appId: "1:892064086812:web:4f0aeec9a6bd24c92958d9"
+         apiKey: "AIzaSyBygcOaz8etf0XycZ4ILTrUkSXD-SKhFVM", // Replace with your actual API key if needed
+         authDomain: "sng-hustle-board-standalone.firebaseapp.com",
+         projectId: "sng-hustle-board-standalone",
+         storageBucket: "sng-hustle-board-standalone.appspot.com",
+         messagingSenderId: "892064086812",
+         appId: "1:892064086812:web:4f0aeec9a6bd24c92958d9"
         };
         // --- End Firebase Configuration ---
 
@@ -532,20 +376,18 @@
         // --- State Variables ---
         let draggedElement = null;      // Stores the element being dragged
         let draggedElementType = null;  // Stores the type ('kanban-task' or 'idea-task') of the dragged element
-        let currentSelectedDate = '';  // Stores the currently selected date string (YYYY-MM-DD)
+        let currentSelectedDate = '';   // Stores the currently selected date string (YYYY-MM-DD)
         let taskCheckIntervalId = null; // Stores the interval ID for checking task start times
         let progressTimerIntervalId = null; // Stores the interval ID for updating progress bars
         let lastMinuteIntervalId = null; // Stores the interval ID for faster updates in the last minute
         let ideaTaskToSchedule = null;  // Stores idea task data when prompting for time
-        let wakeLockEnabled = false; // State variable for wake lock
-
 
         // --- Utility Functions ---
 
-        // Gets the current date in-MM-DD format for a given timezone
+        // Gets the current date in YYYY-MM-DD format for a given timezone
         function getCurrentDateString(timeZone) {
             const now = new Date();
-            const formatter = new Intl.DateTimeFormat('en-CA', { // en-CA format is-MM-DD
+            const formatter = new Intl.DateTimeFormat('en-CA', { // en-CA format is YYYY-MM-DD
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -577,7 +419,7 @@
             return now.toLocaleString('en-US', options);
         }
 
-        // Formats a-MM-DD date string into a more readable format (e.g., "April 30, 2025")
+        // Formats a YYYY-MM-DD date string into a more readable format (e.g., "April 30, 2025")
         function formatDisplayDate(dateString) {
             if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return "Invalid Date";
             const [year, month, day] = dateString.split('-');
@@ -632,7 +474,7 @@
         /**
          * Loads tasks for a specific date from the 'hustle_tasks' collection.
          * Includes detailed error logging.
-         * @param {string} dateString - The date in-MM-DD format.
+         * @param {string} dateString - The date in YYYY-MM-DD format.
          * @returns {Promise<object>} A promise that resolves to an object {todo: [], inprogress: [], done: []}.
          * @throws {Error} If Firestore is not initialized or if loading fails.
          */
@@ -655,7 +497,7 @@
             const docRef = hustleTasksCollection.doc(dateString);
 
             try {
-                console.log(`Working document: ${docRef.path}`);
+                console.log(`Workspaceing document: ${docRef.path}`);
                 const docSnap = await docRef.get(); // Attempt to get the document
 
                 if (docSnap.exists) { // Check the boolean property for Compat SDK
@@ -693,7 +535,7 @@
         /**
          * Saves the current state of the Kanban board for a specific date to Firestore.
          * Overwrites the existing document for that date.
-         * @param {string} dateString - The date in-MM-DD format.
+         * @param {string} dateString - The date in YYYY-MM-DD format.
          * @param {object} tasksForDate - An object {todo: [], inprogress: [], done: []} containing task data.
          */
         async function saveTasksToFirestore(dateString, tasksForDate) {
@@ -719,7 +561,7 @@
                  console.error("Error Message:", error.message);
                  alert(`Error saving daily tasks for ${formatDisplayDate(dateString)}. Check console for details.`);
              }
-           }
+         }
 
         /**
          * Loads all tasks from the 'hustle_ideaBoxTasks' collection, ordered by creation time.
@@ -886,7 +728,7 @@
             task.dataset.type = 'kanban-task';
             task.dataset.text = text || '';
             if (startTime) task.dataset.startTime = startTime; // Only set if startTime is not null/empty
-            if (endTime) task.dataset.endTime = endTime;      // Only set if endTime is not null/empty
+            if (endTime) task.dataset.endTime = endTime;       // Only set if endTime is not null/empty
             if (completionDate) task.dataset.completionDate = completionDate;
 
             // Create and append the display content (text, time, etc.)
@@ -1227,12 +1069,6 @@
                     if (progressContainer) {
                         progressContainer.remove(); // Remove progress bar
                     }
-                     // Also remove task-with-notification class and any badge
-                     taskElement.classList.remove('task-with-notification');
-                     const badge = taskElement.querySelector('.notification-badge');
-                     if (badge) badge.remove();
-                     // Reset last notified percentage
-                     delete taskElement.dataset.lastNotifiedPercentage;
                 }
             }
 
@@ -1252,7 +1088,7 @@
 
         /**
          * Loads and displays tasks for a specific date on the Kanban board.
-         * @param {string} dateString - The date in-MM-DD format.
+         * @param {string} dateString - The date in YYYY-MM-DD format.
          */
         async function displayTasksForDate(dateString) {
             // Check Firestore initialization
@@ -1290,8 +1126,6 @@
 
                 checkAndMoveTasks(); // Check if tasks need to be moved based on current time
                 updateInProgressTimers(); // Initialize/update progress timers
-                 updateWakeLockBasedOnActiveTasks(); // Update wake lock after loading tasks
-
 
             } catch (error) {
                 // Error is logged in detail within loadTasksFromFirestore
@@ -1332,7 +1166,7 @@
                          const taskData = {
                              text: task.dataset.text || '',
                              startTime: task.dataset.startTime || null, // Will be null if attribute not set
-                             endTime: task.dataset.endTime || null,      // Will be null if attribute not set
+                             endTime: task.dataset.endTime || null,     // Will be null if attribute not set
                              // Retrieve completion date carefully, ensuring 'null' string isn't saved
                              completionDate: task.dataset.completionDate && task.dataset.completionDate !== 'null' ? task.dataset.completionDate : null
                          };
@@ -1350,7 +1184,7 @@
 
              // Call the function to save the structured data to Firestore
              await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate);
-           }
+         }
 
         /**
          * Handles adding a new daily task from the form to the 'To Do' column.
@@ -1458,7 +1292,7 @@
             setTimeout(() => {
                 if (draggedElement) draggedElement.classList.add('dragging');
             }, 0);
-            console.log(`Drag Start: ${draggedElementType} onto ${event.target.parentElement.closest('.kanban-column, #idea-task-list')?.id || 'unknown'}`);
+            console.log(`Drag Start: ${draggedElementType} - ${draggedElement.id}`);
         }
 
         // Called when dragging of a task ends (successfully or cancelled)
@@ -1472,8 +1306,6 @@
             draggedElementType = null;
             // Remove drag-over styling from all columns
             columns.forEach(col => col.classList.remove('drag-over'));
-             // Update wake lock state after drag ends (could change active tasks)
-            updateWakeLockBasedOnActiveTasks();
         }
 
         // Called frequently as an element is dragged over a potential drop target
@@ -1487,17 +1319,11 @@
                 event.dataTransfer.dropEffect = "none"; // Indicate dropping is not allowed
                 return;
             }
-            // Prevent invalid drops (idea task to wrong column, dropping onto self)
+            // Prevent dropping idea tasks onto 'In Progress' or 'Done' columns
             if (draggedElementType === 'idea-task' && targetColumn && (targetColumn.id === 'inprogress' || targetColumn.id === 'done')) {
                 event.dataTransfer.dropEffect = "none";
                 return;
             }
-             // Prevent dropping kanban tasks onto the Idea Box
-            if (draggedElementType === 'kanban-task' && event.target.closest('#idea-box-container')) {
-                 event.dataTransfer.dropEffect = "none";
-                 return;
-            }
-
 
             event.dataTransfer.dropEffect = "move"; // Indicate dropping is allowed
 
@@ -1505,8 +1331,6 @@
             if (targetColumn && !targetColumn.classList.contains('drag-over')) {
                 columns.forEach(col => col.classList.remove('drag-over')); // Remove from others
                 targetColumn.classList.add('drag-over'); // Add to current target
-            } else if (!targetColumn) { // If dragging over outside columns (e.g., over Idea Box)
-                 columns.forEach(col => col.classList.remove('drag-over')); // Ensure no column is highlighted
             }
         }
 
@@ -1514,7 +1338,6 @@
         function handleDragLeave(event) {
             const targetColumn = event.target.closest('.kanban-column');
             // Remove drag-over style if the mouse leaves the column area
-            // Use relatedTarget to ensure we only remove if leaving the column entirely
             if (targetColumn && !targetColumn.contains(event.relatedTarget)) {
                 targetColumn.classList.remove('drag-over');
             }
@@ -1536,13 +1359,10 @@
             if (targetElement && targetElement.classList.contains('editing')) {
                 console.warn("Drop cancelled: Target element is being edited."); return;
             }
-            // Prevent invalid drops (idea task to wrong column, dropping onto self, kanban to idea box)
+            // Prevent invalid drops (idea task to wrong column, dropping onto self)
             if (draggedElementType === 'idea-task' && (targetColumn.id === 'inprogress' || targetColumn.id === 'done')) {
                  console.warn("Drop cancelled: Idea tasks can only be dropped onto 'To Do'."); return;
             }
-             if (draggedElementType === 'kanban-task' && event.target.closest('#idea-box-container')) {
-                  console.warn("Drop cancelled: Kanban tasks cannot be moved back to Idea Box."); return;
-             }
             if (draggedElement === targetElement) {
                  console.warn("Drop cancelled: Dropped onto self."); return;
             }
@@ -1570,12 +1390,6 @@
                 if (previousColumn?.id === 'inprogress' && targetColumn.id !== 'inprogress') {
                     const progressContainer = draggedElement.querySelector('.task-progress-container');
                     if (progressContainer) progressContainer.remove();
-                     // Also remove task-with-notification class and any badge
-                     draggedElement.classList.remove('task-with-notification');
-                     const badge = draggedElement.querySelector('.notification-badge');
-                     if (badge) badge.remove();
-                     // Reset last notified percentage
-                     delete draggedElement.dataset.lastNotifiedPercentage;
                 }
 
                 // Clear completion date if moving out of 'Done'
@@ -1620,19 +1434,8 @@
                         if (!draggedElement.querySelector('.task-progress-container')) {
                             draggedElement.appendChild(createProgressElements());
                         }
-
-                        // Trigger the initial "Task In Progress" notification using the new function
-                        // only if viewing today's date
-                         const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
-                         if (currentSelectedDate === todayDateStr) {
-                            notifyTaskInProgress(draggedElement);
-                         } else {
-                             console.log(`Task "${draggedElement.dataset.text}" moved to In Progress but not for today, skipping initial notification.`);
-                         }
-
+                        updateSingleTaskTimer(draggedElement); // Update timer immediately
                     }
-                     // Update wake lock state immediately
-                     updateWakeLockBasedOnActiveTasks();
                 }
 
                 // --- Move the element in the DOM ---
@@ -1647,8 +1450,6 @@
                 await saveCurrentBoardState();
                 updateInProgressTimers();
             }
-             // Update wake lock state after drop completes (could change active tasks)
-            updateWakeLockBasedOnActiveTasks();
         }
 
 
@@ -1830,8 +1631,8 @@
                     // If all lists are empty, you could potentially delete the entire date document using batch.delete(docRef)
                     // Example:
                     // if (dayWasModified && tasksToKeepInDone.length === 0 && (!tasksForDay.todo || tasksForDay.todo.length === 0) && (!tasksForDay.inprogress || tasksForDay.inprogress.length === 0)) {
-                    //      console.log(`Marking empty document ${dateString} for deletion in batch.`);
-                    //      batch.delete(hustleTasksCollection.doc(dateString));
+                    //     console.log(`Marking empty document ${dateString} for deletion in batch.`);
+                    //     batch.delete(hustleTasksCollection.doc(dateString));
                     // }
                 });
 
@@ -1951,15 +1752,6 @@
                     setTimeout(() => {
                         task.classList.remove('task-just-moved');
                     }, 1800); // Remove highlight after 1.8 seconds
-
-                    // Trigger the initial "Task In Progress" notification using the new function
-                    // only if viewing today's date
-                    const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
-                    if (currentSelectedDate === todayDateStr) {
-                       notifyTaskInProgress(task); // Use the new consolidated function
-                    } else {
-                        console.log(`Task "${task.dataset.text}" auto-moved to In Progress but not for today, skipping initial notification.`);
-                    }
                 }
             });
 
@@ -1967,7 +1759,6 @@
             if (taskMoved) {
                 await saveCurrentBoardState();
                 updateInProgressTimers();
-                 updateWakeLockBasedOnActiveTasks(); // Update wake lock state
             }
         }
 
@@ -1984,7 +1775,7 @@
                 randomIndex = 0; // Only one quote available
             }
             currentQuoteIndex = randomIndex; // Update the index
-            quoteDisplay.textContent = motivationalQuotes[randomIndex]; // Set the text content
+            quoteDisplay.textContent = motivationalQuotes[currentQuoteIndex]; // Set the text content
         }
 
         // --- In Progress Timer Update Functions ---
@@ -1998,9 +1789,6 @@
 
             // Ensure necessary elements and data are present
             if (!progressBarFill || !remainingTimeSpan || !startTimeStr || !endTimeStr) {
-                // Remove progress elements if times are missing but elements exist
-                 const progressContainer = taskElement.querySelector('.task-progress-container');
-                 if (progressContainer) progressContainer.remove();
                 return Infinity; // Return a large number if data is missing
             }
 
@@ -2014,8 +1802,6 @@
                 if (isNaN(startDate) || isNaN(endDate) || endDate <= startDate) {
                     remainingTimeSpan.textContent = 'Invalid Time';
                     progressBarFill.style.width = '0%';
-                     const progressContainer = taskElement.querySelector('.task-progress-container');
-                     if (progressContainer) progressContainer.remove(); // Remove on invalid time
                     return Infinity;
                 }
 
@@ -2043,114 +1829,12 @@
                     const remainingMinutes = Math.ceil(remainingSecondsTotal / 60);
                     remainingTimeSpan.textContent = `${remainingMinutes}m left`;
                 }
-
-                 // Send periodic notification and update badge if viewing today's date and still in progress
-                 const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
-                 if (currentSelectedDate === todayDateStr && remainingSecondsTotal > 0) {
-                    const taskText = taskElement.dataset.text || 'Task in progress';
-                    // Check if we should send a notification based on progress thresholds
-                    const lastNotifiedPercentage = parseFloat(taskElement.dataset.lastNotifiedPercentage || '0');
-                    const currentTimePercentage = percentage; // Use the clamped percentage
-
-                    // Determine if a notification is needed (e.g., every 25%, or if it just started, or nearing end)
-                     let needsNotification = false;
-                     let notificationText = '';
-
-                     // Update badge based on progress/time remaining
-                     let badge = taskElement.querySelector('.notification-badge');
-                     if (badge) {
-                         if (remainingSecondsTotal < 60 && remainingSecondsTotal > 0) {
-                             badge.textContent = `${remainingSecondsTotal}s`;
-                             badge.style.fontSize = '10px'; // Smaller font for seconds
-                         } else if (remainingSecondsTotal >= 60) {
-                             badge.textContent = `${Math.ceil(remainingSecondsTotal / 60)}m`;
-                              badge.style.fontSize = ''; // Reset font size for minutes
-                         } else { // Time up or invalid
-                              if(badge.parentElement) badge.remove(); // Remove badge if time is up
-                         }
-                         if(badge && badge.parentElement) badge.style.display = 'flex'; // Ensure badge is visible if it exists and has parent
-                     } else if (remainingSecondsTotal > 0 && taskElement.closest('#inprogress')) {
-                         // If badge doesn't exist but should (task in progress with time), create it
-                          badge = document.createElement('div');
-                          badge.classList.add('notification-badge');
-                          taskElement.appendChild(badge);
-                          if (remainingSecondsTotal < 60) {
-                              badge.textContent = `${remainingSecondsTotal}s`;
-                              badge.style.fontSize = '10px';
-                          } else {
-                              badge.textContent = `${Math.ceil(remainingSecondsTotal / 60)}m`;
-                          }
-                          badge.style.display = 'flex';
-                          taskElement.classList.add('task-with-notification'); // Add pulse class if not present
-                     }
-
-
-                     // Periodic notifications based on percentage
-                     if (currentTimePercentage >= 99 && lastNotifiedPercentage < 99) {
-                        needsNotification = true;
-                        notificationText = `Almost Done!\nLess than a minute left for "${taskText}".`;
-                     } else if (currentTimePercentage >= 75 && lastNotifiedPercentage < 75) {
-                         needsNotification = true;
-                         notificationText = `75% Complete!\nKeep pushing on "${taskText}".`;
-                     } else if (currentTimePercentage >= 50 && lastNotifiedPercentage < 50) {
-                         needsNotification = true;
-                         notificationText = `Halfway There!\nYou've completed 50% of "${taskText}".`;
-                     } else if (currentTimePercentage >= 25 && lastNotifiedPercentage < 25) {
-                         needsNotification = true;
-                         notificationText = `25% Progress!\nGreat start on "${taskText}".`;
-                     }
-
-                     if (needsNotification) {
-                         console.log(`Sending progress notification for task ${taskElement.id}: ${notificationText}`);
-                         if (isAppleDevice) {
-                             // iOS notification logic for periodic updates is tricky.
-                             // For simplicity, we'll just trigger the basic createiOSNotification again.
-                             // It might replace the previous one depending on the OS version and tag.
-                             // A better approach for iOS might involve local notifications scheduled upfront.
-                             createiOSNotification(taskElement, notificationText);
-                         } else if ('serviceWorker' in navigator && navigator.serviceWorker.controller) { // Check service worker support and if it's active
-                             // Send update via Service Worker
-                             updateTaskNotification(taskElement, notificationText);
-                         } else {
-                             // Fallback if service worker is not available for periodic updates
-                              sendFallbackNotification(taskElement, notificationText);
-                              console.log("Service worker not available for periodic update, sent fallback notification.");
-                         }
-                         // Update the last notified percentage regardless of platform, to track progress points
-                         taskElement.dataset.lastNotifiedPercentage = currentTimePercentage.toString();
-                     }
-
-
-                 } else if (remainingSecondsTotal <= 0 && currentSelectedDate === todayDateStr) { // Use <= 0 to include exactly 0 or negative
-                     // Task is overdue and it's today - remove notification class/badge and reset percentage
-                     taskElement.classList.remove('task-with-notification');
-                      const badge = taskElement.querySelector('.notification-badge');
-                      if (badge) badge.remove();
-                      delete taskElement.dataset.lastNotifiedPercentage;
-                      // Optionally send a final "Task Overdue" notification here (using fallback as SW might be gone)
-                      // sendFallbackNotification(taskElement, `Task "${taskText}" is now past its end time.`);
-                 } else if (currentSelectedDate !== todayDateStr && (taskElement.classList.contains('task-with-notification') || taskElement.querySelector('.notification-badge'))) {
-                      // If viewing a different date, ensure notification visuals are removed
-                       taskElement.classList.remove('task-with-notification');
-                       const badge = taskElement.querySelector('.notification-badge');
-                       if (badge) badge.remove();
-                       delete taskElement.dataset.lastNotifiedPercentage;
-                 }
-
-
                 return remainingSecondsTotal; // Return remaining seconds for interval adjustment
 
             } catch (e) {
                 console.error("Error updating timer for task:", taskElement.id, e);
                 remainingTimeSpan.textContent = 'Error';
                 progressBarFill.style.width = '0%';
-                 const progressContainer = taskElement.querySelector('.task-progress-container');
-                 if (progressContainer) progressContainer.remove(); // Remove on error
-                 // Also remove notification visuals on error
-                 taskElement.classList.remove('task-with-notification');
-                 const badge = taskElement.querySelector('.notification-badge');
-                 if (badge) badge.remove();
-                 delete taskElement.dataset.lastNotifiedPercentage;
                 return Infinity; // Return large number on error
             }
         }
@@ -2159,462 +1843,42 @@
         function updateInProgressTimers() {
             const inProgressColumn = document.getElementById('inprogress');
             const tasksContainer = inProgressColumn?.querySelector('.tasks-container');
-            if (!tasksContainer) {
-                // If container not found, clear any active timer intervals
-                if (progressTimerIntervalId) clearInterval(progressTimerIntervalId);
-                progressTimerIntervalId = null;
-                if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId);
-                lastMinuteIntervalId = null;
-                 updateWakeLockBasedOnActiveTasks(); // Ensure wake lock is off if no in-progress column
-                return; // Exit if container not found
-            }
+            if (!tasksContainer) return; // Exit if container not found
 
             const tasks = tasksContainer.querySelectorAll('.kanban-task');
             let isInLastMinute = false; // Flag if any task has < 60s remaining
-             let hasActiveTimers = false; // Flag if any task has valid times and is in progress today
 
             tasks.forEach(task => {
                  // Ensure progress elements exist if task should have them (has times)
-                 if (task.dataset.startTime && task.dataset.endTime) {
-                     if (!task.querySelector('.task-progress-container')) {
-                         task.appendChild(createProgressElements());
-                     }
-                     // Check if this task contributes to active timers (has times and viewing today)
-                     const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
-                     if (currentSelectedDate === todayDateStr) {
-                          hasActiveTimers = true;
-                     }
-
-
-                 } else {
-                    // Remove progress elements if times are missing but elements exist
-                    const progressContainer = task.querySelector('.task-progress-container');
-                    if (progressContainer) progressContainer.remove();
-                     // Also remove task-with-notification class and any badge if times are removed
-                     task.classList.remove('task-with-notification');
-                      const badge = task.querySelector('.notification-badge');
-                      if (badge) badge.remove();
-                      delete task.dataset.lastNotifiedPercentage;
+                 if (task.dataset.startTime && task.dataset.endTime && !task.querySelector('.task-progress-container')) {
+                     task.appendChild(createProgressElements());
                  }
-
-                // Update the timer for this task (only if it has times)
-                if (task.dataset.startTime && task.dataset.endTime) {
-                    const remainingSeconds = updateSingleTaskTimer(task);
-                    // Check if this task triggers the need for faster updates
-                    if (remainingSeconds >= 0 && remainingSeconds < 60) {
-                        isInLastMinute = true;
-                    }
-                }
+                 // Update the timer for this task
+                 const remainingSeconds = updateSingleTaskTimer(task);
+                 // Check if this task triggers the need for faster updates
+                 if (remainingSeconds >= 0 && remainingSeconds < 60) {
+                     isInLastMinute = true;
+                 }
             });
 
             // Adjust update interval based on whether any task is in its last minute
             if (isInLastMinute && !lastMinuteIntervalId) {
                 // Switch to faster (1-second) updates
-                console.log("Switching to 1s timer interval.");
                 clearInterval(progressTimerIntervalId); // Clear the slower interval
                 progressTimerIntervalId = null;
-                if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId); // Clear existing faster if any
                 lastMinuteIntervalId = setInterval(updateInProgressTimers, LAST_MINUTE_INTERVAL);
-
+                console.log("Starting last minute timer interval (1s).");
             } else if (!isInLastMinute && lastMinuteIntervalId) {
                 // Switch back to slower updates if no tasks are in the last minute
-                 console.log("Switching to 15s timer interval.");
                 clearInterval(lastMinuteIntervalId); // Clear the faster interval
                 lastMinuteIntervalId = null;
-                // Restart the regular interval only if there are tasks with timers
-                 if (hasActiveTimers && !progressTimerIntervalId) {
-                     progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
-                 } else if (!hasActiveTimers && progressTimerIntervalId) {
-                      // If no tasks with timers exist, and the regular interval is somehow still running, clear it.
-                      clearInterval(progressTimerIntervalId);
-                      progressTimerIntervalId = null;
-                 }
-            } else if (hasActiveTimers && !progressTimerIntervalId && !lastMinuteIntervalId) {
-                 // If there are tasks with timers, but no interval is running (e.g., after initial load)
-                 console.log("Starting initial 15s timer interval.");
-                 progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
-            } else if (!hasActiveTimers && (progressTimerIntervalId || lastMinuteIntervalId)) {
-                 // If there are no tasks with timers, but an interval is running, clear it.
-                 console.log("No active timers, clearing intervals.");
-                 if (progressTimerIntervalId) clearInterval(progressTimerIntervalId);
-                 progressTimerIntervalId = null;
-                 if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId);
-                 lastMinuteIntervalId = null;
-            }
-             // Update wake lock state based on whether there are *any* in-progress tasks with times today
-             updateWakeLockBasedOnActiveTasks();
-        }
-
-
-        // --- Notification & PWA Related Functions ---
-
-        // Detect iOS/Apple devices for special handling
-        const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isiPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-        const isAppleDevice = iOS || isiPadOS;
-
-        // Add iOS class to body if needed for CSS adjustments
-        if (isAppleDevice) {
-            document.body.classList.add('ios-device');
-        }
-
-        // Variable to store timeout for iOS notifications (simple handling for demo)
-        let iOSNotificationTimeout = null;
-
-        // Function to create iOS specific notifications (which work differently)
-        function createiOSNotification(taskData, progressInfo) {
-            if (!('Notification' in window) || Notification.permission !== 'granted') {
-                return false; // Indicate notification was not sent
-            }
-
-            // iOS requires direct notification creation rather than through service worker
-            const taskText = taskData.text || taskData.dataset?.text || 'Task in progress';
-            const taskId = taskData.id || taskData.dataset?.id || Math.random().toString(36).substring(2);
-
-            // Clear any previous notification timeout
-            if (iOSNotificationTimeout) {
-                clearTimeout(iOSNotificationTimeout);
-                iOSNotificationTimeout = null;
-            }
-
-            try {
-                // Create the notification
-                const notification = new Notification('SNG Hustle Board', { // Consistent title
-                    body: `${taskText}\n${progressInfo || ''}`,
-                    icon: 'icon-192.png', // Use relative path here, should work for direct notifications
-                    badge: 'icon-192.png', // Use relative path here
-                    tag: `task-${taskId}`, // Use tag to replace existing notification
-                    renotify: true,
-                    requireInteraction: true // Keep visible until interacted with (iOS might ignore)
-                });
-
-                 // iOS requires we keep the notification visible for a while
-                iOSNotificationTimeout = setTimeout(() => {
-                    notification.close();
-                     iOSNotificationTimeout = null; // Clear timeout ID after closing
-                }, 30000); // Close after 30 seconds (adjust as needed)
-
-
-                notification.onclick = function() {
-                    window.focus();
-                    this.close();
-                };
-
-                 console.log('Direct iOS notification created:', notification);
-                 return true; // Indicate notification was sent
-
-            } catch (error) {
-                 console.error('Error creating direct iOS notification:', error);
-                 //alert('Error creating iOS notification: ' + error.message); // Avoid redundant alerts
-                 return false; // Indicate notification failed
-            }
-        }
-
-         // Fallback notification function when service worker fails or is not supported
-        function sendFallbackNotification(taskData, progressInfo) {
-            if (!('Notification' in window) || Notification.permission !== 'granted') {
-                console.log('Notification permission not granted or API not supported, fallback not possible');
-                return false; // Indicate notification was not sent
-            }
-
-            try {
-                const taskText = taskData.text || taskData.dataset?.text || 'Task in progress';
-                const taskId = taskData.id || taskData.dataset?.id || Math.random().toString(36).substring(2);
-
-                // Create direct notification
-                const notification = new Notification('SNG Hustle Board', { // Consistent title
-                    body: `${taskText}\n${progressInfo || ''}`,
-                    icon: 'icon-192.png',  // Use relative path here, should work for direct notifications
-                    badge: 'icon-192.png',
-                    tag: `task-${taskId}`,
-                    renotify: true,
-                    requireInteraction: true
-                });
-
-                notification.onclick = function() {
-                    window.focus();
-                    this.close();
-                };
-
-                console.log('Fallback direct notification sent:', notification);
-                return true; // Indicate notification was sent
-
-            } catch (error) {
-                console.error('Error sending fallback notification:', error);
-                //alert('Error sending fallback notification: ' + error.message); // Avoid redundant alerts
-                return false; // Indicate notification failed
-            }
-        }
-
-
-        // Function to update notifications from tasks (for non-iOS via Service Worker)
-        function updateTaskNotification(taskData, progressInfo) {
-            // Check Service Worker support and if it's active and controlling the page
-            if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
-                console.log('Service worker not available or not controlling the page, cannot send update message.');
-                 return false; // Indicate notification was not sent via SW
-            }
-             if (Notification.permission !== 'granted') {
-                 console.log('Notification permission not granted, cannot send service worker notification.');
-                 return false; // Indicate notification was not sent via SW
-             }
-
-
-            try {
-                 navigator.serviceWorker.controller.postMessage({
-                     type: 'UPDATE_TASK_NOTIFICATION',
-                     taskData: {
-                         id: taskData.id || taskData.dataset?.id || Math.random().toString(36).substring(2),
-                         text: taskData.text || taskData.dataset?.text || 'Task update',
-                         progressInfo: progressInfo
-                     }
-                 });
-                 console.log('Service worker notification message sent for task:', taskData.id);
-                 return true; // Indicate message was sent
-            } catch (error) {
-                 console.error('Error sending message to service worker:', error);
-                 return false; // Indicate message sending failed
-            }
-        }
-
-         // Update function for when tasks move to In Progress - Centralized Logic
-        function notifyTaskInProgress(taskElement) {
-            if (!taskElement) return;
-
-            const taskText = taskElement.dataset.text || 'Task in progress';
-            const startTime = taskElement.dataset.startTime;
-            const endTime = taskElement.dataset.endTime;
-
-            if (startTime && endTime) {
-                const formattedStart = formatTimeTo12Hour(startTime);
-                const formattedEnd = formatTimeTo12Hour(endTime);
-                const duration = calculateDuration(startTime, endTime);
-
-                // Generate notification info
-                const progressInfo = `🔥 Task now in progress\nStarts: ${formattedStart}, Ends: ${formattedEnd}${duration ? ` (${duration})` : ''}`;
-
-                // Initialize tracking
-                taskElement.dataset.lastNotifiedPercentage = '0';
-
-                // Try multiple notification methods until one works
-                let notificationSent = false;
-
-                // 1. First try iOS-specific method for Apple devices (uses direct Notification API)
-                if (isAppleDevice) {
-                     notificationSent = createiOSNotification(taskElement, progressInfo);
-                }
-
-                // 2. Try service worker if available and not on Apple device
-                if (!notificationSent && 'serviceWorker' in navigator && navigator.serviceWorker.controller && !isAppleDevice) {
-                    notificationSent = updateTaskNotification(taskElement, progressInfo);
-                }
-
-                // 3. If all else fails (including iOS direct failing), use direct notification fallback
-                if (!notificationSent) {
-                    notificationSent = sendFallbackNotification(taskElement, progressInfo);
-                }
-
-                // Update UI elements if a notification was successfully sent by any method
-                if (notificationSent) {
-                    taskElement.classList.add('task-with-notification');
-                    let badge = taskElement.querySelector('.notification-badge');
-                    if (!badge) {
-                        badge = document.createElement('div');
-                        badge.classList.add('notification-badge');
-                        taskElement.appendChild(badge);
-                    }
-                    badge.textContent = '!';
-                    badge.style.display = 'flex';
-
-                    console.log('Notification successfully sent by one method for task:', taskText);
-                } else {
-                    console.warn('All notification methods failed for task:', taskText);
-                     // Ensure notification visuals are removed if all methods failed
-                     taskElement.classList.remove('task-with-notification');
-                     const badge = taskElement.querySelector('.notification-badge');
-                     if (badge) badge.remove();
-                     delete taskElement.dataset.lastNotifiedPercentage;
-                }
-            } else {
-                 console.log(`Task "${taskText}" moved to In Progress but has no times, skipping initial notification.`);
-                 // Ensure no notification visuals are added/present if no times
-                 taskElement.classList.remove('task-with-notification');
-                 const badge = taskElement.querySelector('.notification-badge');
-                 if (badge) badge.remove();
-                 delete taskElement.dataset.lastNotifiedPercentage;
-            }
-        }
-
-
-        // Function to check and request notification permissions (Triggered by modal)
-        async function checkNotificationPermission(registration) { // Registration param is from SW 'load' listener if called there
-            // This function is primarily triggered by the modal handling logic now.
-            // The modal calls Notification.requestPermission() directly.
-            // This function primarily logs the state after the fact if called on load.
-
-            if (!('Notification' in window)) {
-                console.log('This browser does not support notifications');
-                return;
-            }
-
-            // If permission is default and we haven't prompted recently, the modal logic will handle it.
-            // If permission is granted or denied, no action needed from here unless granting triggers wake lock.
-            if (Notification.permission === 'default' && !localStorage.getItem('notificationPromptShown')) {
-                console.log('Notification permission is default, modal will prompt user on DOMContentLoaded.');
-                return; // Let the modal handling logic take over
-            }
-
-            if (Notification.permission === 'granted') {
-                console.log('Notification permission already granted');
-                // If already granted on Apple device, activate wake lock
-                 if (isAppleDevice) {
-                     updateWakeLockBasedOnActiveTasks();
-                 }
-                return registration;
-            } else if (Notification.permission === 'denied') {
-                console.log('Notification permission is denied');
-            }
-            // No requestPermission() call here, as the modal handles the user initiation
-        }
-
-
-        // Enable wake lock to keep screen on during active tasks (iOS)
-        function enableWakeLock() {
-             // Only attempt wake lock on Apple devices when visibility is visible
-            if (wakeLockEnabled || !isAppleDevice || document.visibilityState !== 'visible') return;
-
-             // Check if we have active tasks
-             const inProgressColumn = document.getElementById('inprogress');
-             const tasksContainer = inProgressColumn?.querySelector('.tasks-container');
-             const activeTasks = tasksContainer?.querySelectorAll('.kanban-task') || [];
-
-             // Only enable wake lock if there are active tasks with timers for today
-             const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
-             const tasksWithTimersTodayInProgress = Array.from(activeTasks).filter(task =>
-                 task.dataset.startTime && task.dataset.endTime && currentSelectedDate === todayDateStr
-             );
-
-
-             if (tasksWithTimersTodayInProgress.length === 0) {
-                 console.log('No active tasks with timers for today, skipping wake lock enable.');
-                 disableWakeLock(); // Ensure wake lock is off if criteria no longer met
-                 return;
-             }
-
-
-            // For iOS, we use a "poor man's wake lock" by playing a silent video
-            // Check if video already exists
-            let video = document.getElementById('wake-lock-video');
-            if (!video) {
-                 console.log('Creating and appending wake lock video element.');
-                 video = document.createElement('video');
-                 video.id = 'wake-lock-video';
-                 video.setAttribute('playsinline', '');
-                 video.setAttribute('muted', '');
-                 video.setAttribute('loop', '');
-                 video.style.position = 'absolute'; // Use absolute positioning
-                 video.style.width = '1px';
-                 video.style.height = '1px';
-                 video.style.left = '-9999px';
-                 video.style.opacity = '0.01';
-                 video.style.display = 'block'; // Needs to be block to potentially load/play
-
-
-                 const source = document.createElement('source');
-                 // This should be a tiny silent MP4 file - using a data URL here (ensure this is valid and works)
-                 // You might need to replace this data URL with a small, actual silent video file hosted locally.
-                 source.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAs1tZGF0AAACrgYF//+q3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0OCByMjYwMSBhMGNkN2QzIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNSAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL2gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPDEwIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAD2WIhAA3//728P4FNjuZQQAAAu5tb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAZAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACGHRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAgAAAAIAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAGQAAAAAAAEAAAAAAZBtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAACgAAAAEAFXEAAAAAAAtaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAE7bWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAA+3N0bGwAAACXc3RzZAAAAAAAAAABAAAAh2F2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAgACAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAxYXZjQwFkAAr/4QAYZ2QACqzZX4iIhAAAAwAEAAADAFA8SJZYAQAGaOvjyyLAAAAAGHN0dHMAAAAAAAAAAQAAAAEAAAQAAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAABAAAAAQAAABRzdHN6AAAAAAAAAsUAAAABAAAAFHN0Y28AAAAAAAAAAQAAADAAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjU2LjQwLjEwMQ==';
-                 source.type = 'video/mp4';
-                 video.appendChild(source);
-                 document.body.appendChild(video);
-            }
-
-
-            // Attempt to play the video. Needs user interaction to start.
-            // This will be triggered by user actions like moving a task to In Progress
-            // or clicking 'Allow' on the notification modal if a task is already there.
-            video.play().then(() => {
-                wakeLockEnabled = true;
-                console.log('iOS wake lock enabled');
-            }).catch(error => {
-                console.warn('Could not enable iOS wake lock (play failed):', error);
-                 // If play fails, clean up
-                 if (video && video.parentElement) {
-                     video.remove();
-                 }
-                 wakeLockEnabled = false;
-            });
-        }
-
-        function disableWakeLock() {
-            if (!wakeLockEnabled) return;
-
-            const video = document.getElementById('wake-lock-video');
-            if (video) {
-                console.log('Disabling iOS wake lock, removing video.');
-                video.pause();
-                if (video.parentElement) {
-                    video.remove();
+                // Restart the regular interval only if it's not already running
+                if (!progressTimerIntervalId) {
+                    progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
+                    console.log("Stopping last minute timer, restarting regular interval (15s).");
                 }
             }
-            wakeLockEnabled = false;
-            console.log('iOS wake lock disabled');
         }
-
-        // Update wake lock based on active tasks and visibility state
-        function updateWakeLockBasedOnActiveTasks() {
-            if (!isAppleDevice) return; // Only relevant for Apple devices
-
-             // Only manage wake lock if the page is visible
-             if (document.visibilityState !== 'visible') {
-                 console.log('Page not visible, disabling wake lock.');
-                 disableWakeLock();
-                 return;
-             }
-
-            const inProgressColumn = document.getElementById('inprogress');
-            if (!inProgressColumn) {
-                 disableWakeLock(); // If column doesn't exist, disable
-                 return;
-            }
-
-            const tasksContainer = inProgressColumn.querySelector('.tasks-container');
-            if (!tasksContainer) {
-                 disableWakeLock(); // If container doesn't exist, disable
-                 return;
-            }
-
-            const activeTasks = tasksContainer.querySelectorAll('.kanban-task');
-
-             // Check for active tasks with timers for today
-             const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
-             const tasksWithTimersTodayInProgress = Array.from(activeTasks).filter(task =>
-                 task.dataset.startTime && task.dataset.endTime && currentSelectedDate === todayDateStr
-             );
-
-
-            // Enable wake lock if there are tasks with timers in 'In Progress' for today AND the page is visible
-            if (tasksWithTimersTodayInProgress.length > 0) {
-                enableWakeLock();
-            } else {
-                disableWakeLock();
-            }
-        }
-
-        // Check for active tasks periodically (adjust interval if needed)
-        setInterval(updateWakeLockBasedOnActiveTasks, 60000); // Check every minute
-
-        // Check when app becomes visible or hidden
-        document.addEventListener('visibilitychange', () => {
-            console.log('Visibility state changed:', document.visibilityState);
-            if (document.visibilityState === 'visible') {
-                updateWakeLockBasedOnActiveTasks(); // Enable wake lock if needed on focus
-                updateInProgressTimers(); // Update timers immediately on focus
-            } else {
-                updateWakeLockBasedOnActiveTasks(); // Disable wake lock when hidden
-            }
-        });
-
 
         // --- Initialization ---
         // Runs when the DOM content is fully loaded
@@ -2676,11 +1940,11 @@
             }
 
             // Load and display the summary for yesterday
-             try {
+            try {
                  await displayLatestSummary();
-             } catch(error) {
+            } catch(error) {
                  console.error("Failed to display latest summary:", error);
-             }
+            }
 
             // --- Add Event Listeners for Forms and Modals ---
             const addTaskBtnLocal = document.getElementById('add-task-btn');
@@ -2704,216 +1968,6 @@
             if (modalSaveBtn) modalSaveBtn.addEventListener('click', handleModalSave);
             if (modalCancelBtn) modalCancelBtn.addEventListener('click', hideTimePrompt);
 
-
-            // --- Notification Permission Modal Handling ---
-            const notificationModal = document.getElementById('notification-permission-modal');
-            const allowBtn = document.getElementById('allow-notifications-btn');
-            const laterBtn = document.getElementById('later-notifications-btn');
-
-            if (notificationModal && allowBtn && laterBtn) {
-
-                 // Show the modal if permissions haven't been requested before AND notifications are supported
-                 // and permission is 'default' (meaning browser hasn't asked yet)
-                 if ('Notification' in window && Notification.permission === 'default' && !localStorage.getItem('notificationPromptShown')) {
-                     // Wait a bit to show the modal to not overwhelm the user on first load
-                     setTimeout(() => {
-                          // Double check permission state just before showing
-                          if ('Notification' in window && Notification.permission === 'default' && !localStorage.getItem('notificationPromptShown')) {
-                               notificationModal.classList.add('active');
-                          }
-                     }, 5000); // Adjust delay as needed
-                 }
-
-
-                 // Handle allow button click
-                 allowBtn.addEventListener('click', () => {
-                      notificationModal.classList.remove('active');
-                      localStorage.setItem('notificationPromptShown', 'true'); // Remember that we prompted
-
-                      if ('Notification' in window) {
-                           Notification.requestPermission().then(permission => {
-                                if (permission === 'granted') {
-                                     console.log('Notification permission granted by user!');
-                                     // If permission is granted on Apple device, enable wake lock
-                                     if (isAppleDevice) {
-                                         updateWakeLockBasedOnActiveTasks(); // Check and enable wake lock if needed
-                                     }
-                                     // Service worker registration happens on window 'load',
-                                     // checkNotificationPermission will handle the 'granted' state there.
-                                } else {
-                                     console.log('Notification permission denied by user.');
-                                     // Maybe set a shorter localStorage flag for denied state?
-                                }
-                           }).catch(error => {
-                                console.error('Error requesting notification permission:', error);
-                           });
-                      }
-                 });
-
-                 // Handle later button click
-                 laterBtn.addEventListener('click', () => {
-                      notificationModal.classList.remove('active');
-                      // Set a temporary flag so we don't show the prompt too often
-                      localStorage.setItem('notificationPromptShown', 'true'); // Remember that we prompted
-                      // Clear the flag after 3 days (adjust duration as needed) to show the prompt again
-                      const threeDays = 3 * 24 * 60 * 60 * 1000;
-                      setTimeout(() => {
-                           localStorage.removeItem('notificationPromptShown');
-                           console.log('Notification prompt shown flag cleared after 3 days.');
-                      }, threeDays);
-                 });
-            } else {
-                 console.warn("Notification permission modal elements not found.");
-            }
-
-            // --- iOS Add to Home Screen Tip ---
-             if (isAppleDevice) {
-                 // Check if in standalone mode (already installed as PWA)
-                 const isInStandaloneMode = ('standalone' in window.navigator && window.navigator.standalone === true) ||
-                                            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-
-                 // Check if the tip has been shown recently (e.g., within the last week)
-                 const lastShown = localStorage.getItem('installTipShown');
-                 const oneWeek = 7 * 24 * 60 * 60 * 1000;
-                 const hasBeenShownRecently = lastShown && (Date.now() - parseInt(lastShown, 10) < oneWeek);
-
-
-                 // If not in standalone mode and hasn't seen the tip recently, show install tip
-                 if (!isInStandaloneMode && !hasBeenShownRecently) {
-                     console.log("Showing iOS install tip.");
-                     // Create install tip element
-                     const installTip = document.createElement('div');
-                     installTip.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); ' +
-                         'background-color: rgba(0,0,0,0.85); color: white; padding: 15px; border-radius: 10px; ' +
-                         'box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; max-width: 90%; text-align: center; ' +
-                         'font-family: -apple-system, BlinkMacSystemFont, sans-serif;';
-
-                     installTip.innerHTML = `
-                         <p style="margin: 0 0 10px 0; font-weight: bold;">📱 Install SNG Board on your Home Screen</p>
-                         <p style="margin: 0 0 10px 0; font-size: 0.9em;">
-                             Tap <span style="font-size: 1.5em; vertical-align: middle;">
-                                 ${isiPadOS ? '...' : '⬆️'} </span>
-                             and select "Add to Home Screen" for the best experience.
-                         </p>
-                         <button id="dismiss-tip" style="background: #dc2626; border: none; color: white;
-                             padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">Got it</button>
-                     `;
-
-                     document.body.appendChild(installTip);
-
-                     // Add event listener to dismiss button
-                     document.getElementById('dismiss-tip').addEventListener('click', () => {
-                         installTip.remove();
-                         // Record the time the tip was dismissed
-                         localStorage.setItem('installTipShown', Date.now());
-                         console.log("iOS install tip dismissed.");
-                         // The timeout to remove the flag is now handled when setting the item.
-                     });
-                 } else if (isInStandaloneMode) {
-                     console.log("Running in standalone mode, iOS install tip not needed.");
-                 } else {
-                     console.log("iOS install tip has been shown recently, skipping.");
-                 }
-             } else {
-                 console.log("Not an Apple device, iOS install tip not needed.");
-             }
-            // --- End iOS Add to Home Screen Tip ---
-
-            // --- Add a test button to the page ---
-            const testButton = document.createElement('button');
-            testButton.innerText = 'Test Notification';
-            testButton.style.position = 'fixed';
-            testButton.style.top = '10px';
-            testButton.style.right = '10px';
-            testButton.style.zIndex = '9999';
-            testButton.style.backgroundColor = '#dc2626';
-            testButton.style.color = 'white';
-            testButton.style.padding = '8px 16px';
-            testButton.style.borderRadius = '4px';
-            testButton.style.border = 'none';
-            testButton.style.cursor = 'pointer';
-
-            testButton.addEventListener('click', function() {
-                // Request permission if needed
-                if ('Notification' in window && Notification.permission !== 'granted') {
-                     // Trigger the modal logic if permission is default and modal hasn't been shown recently
-                     const notificationModal = document.getElementById('notification-permission-modal');
-                     if (notificationModal && Notification.permission === 'default' && !localStorage.getItem('notificationPromptShown')) {
-                          // Show modal immediately on test button click if applicable
-                          notificationModal.classList.add('active');
-                     } else if ('Notification' in window) {
-                          // Otherwise, if API exists, just request permission directly
-                           Notification.requestPermission().then(function(permission) {
-                               if (permission === 'granted') {
-                                   testNotification();
-                               } else {
-                                   console.log("Notification permission not granted for test.");
-                                   alert("Notification permission is required to send test notifications.");
-                               }
-                           }).catch(error => {
-                                console.error("Error requesting notification permission:", error);
-                                alert("Error requesting notification permission: " + error.message);
-                           });
-                     } else {
-                          // No notification API support
-                          console.log("Notification API not supported for test.");
-                          alert("Notifications are not supported in this browser.");
-                     }
-                } else if ('Notification' in window && Notification.permission === 'granted') {
-                    testNotification(); // Permission already granted
-                } else {
-                    console.log("Notification API not supported, cannot run test notification.");
-                     alert("Notifications are not supported in this browser.");
-                }
-            });
-
-            function testNotification() {
-                 if (!('Notification' in window) || Notification.permission !== 'granted') {
-                      console.log('Cannot run testNotification: Notification permission not granted.');
-                      return;
-                 }
-
-                 console.log('Running test notification...');
-                // Try direct notification first (for simple tests or fallback)
-                try {
-                    const notification = new Notification('Test Notification', {
-                        body: 'This is a direct notification test',
-                        icon: 'icon-192.png' // Use relative path here
-                    });
-
-                    console.log('Direct notification created:', notification);
-                } catch (error) {
-                    console.error('Error creating direct notification:', error);
-                    // alert('Error creating direct notification: ' + error.message); // Avoid multiple alerts
-                }
-
-                // Try service worker notification if available and controlling the page
-                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                    try {
-                         navigator.serviceWorker.controller.postMessage({
-                             type: 'UPDATE_TASK_NOTIFICATION', // Use the standard message type
-                             taskData: {
-                                 id: 'test-' + Date.now(),
-                                 text: 'Test Task from Button',
-                                 progressInfo: 'Testing service worker message handling'
-                             }
-                         });
-                         console.log('Service worker notification message sent');
-                    } catch (error) {
-                         console.error('Error sending service worker message:', error);
-                         // alert('Error sending service worker message: ' + error.message); // Avoid multiple alerts
-                    }
-                } else {
-                    console.warn('No active service worker to send notification message to');
-                     // Fallback? Maybe not needed for a dedicated test button, but good to note.
-                }
-            }
-
-             // Append the test button to the body
-             document.body.appendChild(testButton);
-            // --- End Test Button ---
-
-
             // --- Start Background Intervals ---
             // Start interval to check for tasks whose start time has passed
             if (taskCheckIntervalId) clearInterval(taskCheckIntervalId); // Clear existing if any
@@ -2923,79 +1977,11 @@
             // Start interval to update progress timers for 'In Progress' tasks
             if (progressTimerIntervalId) clearInterval(progressTimerIntervalId); // Clear existing if any
             if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId); // Clear existing if any
-            // Initial call to set up timers based on loaded tasks and potentially start faster interval
-            updateInProgressTimers();
-            // Start the general timer update interval only if no timer interval is active
-            if (!progressTimerIntervalId && !lastMinuteIntervalId) {
-                 progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
-                 console.log(`Started regular progress timer interval (${TIMER_UPDATE_INTERVAL / 1000}s). ID: ${progressTimerIntervalId}`);
-            }
-
+            progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
+            console.log(`Started progress timer interval (${TIMER_UPDATE_INTERVAL / 1000}s). ID: ${progressTimerIntervalId}`);
 
             console.log("Initialization complete.");
         });
-
-        // Service Worker Registration (kept outside DOMContentLoaded, as recommended)
-        // This ensures it tries to register as soon as the script is parsed
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // Log service worker status
-                if (navigator.serviceWorker.controller) {
-                    console.log('Service Worker is already controlling this page');
-                } else {
-                    console.log('No Service Worker is controlling this page yet');
-                }
-
-                // Get the exact current page URL path (critical for GitHub Pages)
-                // Use the URL constructor for robustness
-                 const scriptURL = new URL('service-worker.js', window.location.href).href;
-
-                 console.log('Attempting to register service worker from URL:', scriptURL);
-
-
-                // Register the service worker
-                navigator.serviceWorker.register(scriptURL)
-                .then(registration => {
-                    console.log('ServiceWorker registration successful with scope:', registration.scope);
-
-                    // Check service worker state
-                    if (registration.installing) {
-                        console.log('Service worker installing');
-                    } else if (registration.waiting) {
-                        console.log('Service worker installed but waiting');
-                    } else if (registration.active) {
-                        console.log('Service worker active');
-                    }
-
-                    // Clear any error messages
-                    const errorBanner = document.querySelector('div[style*="WARNING"]');
-                    if (errorBanner) errorBanner.remove();
-
-                    // Verify notification permission
-                    console.log('Current notification permission:', Notification.permission);
-                })
-                .catch(error => {
-                    console.error('ServiceWorker registration failed:', error);
-                    console.error('Error name:', error.name);
-                    console.error('Error message:', error.message);
-
-                    // Add more detailed debug information
-                    if (error.name === 'SecurityError') {
-                        console.error('SECURITY ERROR: This may be due to trying to register a service worker on an insecure origin. Service Workers require HTTPS.');
-                    } else if (error.name === 'TypeError') {
-                        console.error('TYPE ERROR: Check if the service-worker.js file exists at the correct location:', scriptURL);
-                    }
-
-                    // Display a more helpful error message
-                    const swErrorDiv = document.createElement('div');
-                    swErrorDiv.textContent = `WARNING: Could not register Service Worker. Error: ${error.message}. Check console logs.`;
-                    swErrorDiv.style.cssText = 'background-color: #facc15; color: #1f2937; padding: 10px; text-align: center; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 10000; font-weight: bold;';
-                    document.body.appendChild(swErrorDiv);
-                });
-            });
-        }
-
-
     </script>
 
 </body>
