@@ -7,6 +7,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -309,10 +310,15 @@
         }
 
         // --- Firestore Collection References ---
-        // Get references to Firestore collections only if db was initialized successfully
-        const hustleTasksCollection = db ? db.collection("hustle_tasks") : null; // For daily scheduled tasks
-        const hustleArchiveCollection = db ? db.collection("hustle_archive") : null; // For archived tasks
-        const hustleIdeaBoxCollection = db ? db.collection("hustle_ideaBoxTasks") : null; // For unscheduled idea tasks
+        // Assigned after authentication
+        let hustleTasksCollection;
+        let hustleArchiveCollection;
+        let hustleIdeaBoxCollection;
+        // Legacy root collections for migration
+        const legacyTasksCollection = db ? db.collection("hustle_tasks") : null;
+        const legacyIdeaBoxCollection = db ? db.collection("hustle_ideaBoxTasks") : null;
+        const legacyArchiveCollection = db ? db.collection("hustle_archive") : null;
+        let userUID = null;
 
         // --- Constants ---
         const BOSTON_TIMEZONE = 'America/New_York'; // Timezone for date/time operations
@@ -495,6 +501,7 @@
             }
             // Get a reference to the specific date document
             const docRef = hustleTasksCollection.doc(dateString);
+            const legacyDocRef = legacyTasksCollection ? legacyTasksCollection.doc(dateString) : null;
 
             try {
                 console.log(`Workspaceing document: ${docRef.path}`);
@@ -512,10 +519,24 @@
                     };
                     console.log(`Successfully processed tasks for ${dateString}.`);
                     return tasks;
+                } else if (legacyDocRef) {
+                    const legacySnap = await legacyDocRef.get();
+                    if (legacySnap.exists) {
+                        const legacyData = legacySnap.data() || {};
+                        await docRef.set(legacyData);
+                        console.log(`Migrated legacy data for ${dateString} to user collection.`);
+                        return {
+                            todo: Array.isArray(legacyData.todo) ? legacyData.todo : [],
+                            inprogress: Array.isArray(legacyData.inprogress) ? legacyData.inprogress : [],
+                            done: Array.isArray(legacyData.done) ? legacyData.done : []
+                        };
+                    } else {
+                        console.log(`No document found for ${dateString}, returning empty task lists.`);
+                        return { todo: [], inprogress: [], done: [] };
+                    }
                 } else {
-                    // Document doesn't exist for this date
                     console.log(`No document found for ${dateString}, returning empty task lists.`);
-                    return { todo: [], inprogress: [], done: [] }; // Return empty structure
+                    return { todo: [], inprogress: [], done: [] };
                 }
             } catch (error) {
                 // Log detailed error information if the fetch fails
@@ -550,9 +571,13 @@
              console.log(`Attempting to save daily tasks for ${dateString}... Data:`, tasksForDate);
              // Get a reference to the specific date document
              const docRef = hustleTasksCollection.doc(dateString);
+             const legacyDocRef = legacyTasksCollection ? legacyTasksCollection.doc(dateString) : null;
              try {
                  // Use set() to completely overwrite the document with the new state
                  await docRef.set(tasksForDate);
+                 if (legacyDocRef) {
+                     try { await legacyDocRef.delete(); } catch(e) { /* ignore */ }
+                 }
                  console.log("Daily tasks successfully saved for date:", dateString);
              } catch (error) {
                  // Log detailed error information if saving fails
@@ -575,7 +600,17 @@
             const ideaTasks = [];
             try {
                 // Query the collection, ordering by 'createdAt' descending
-                const querySnapshot = await hustleIdeaBoxCollection.orderBy("createdAt", "desc").get();
+                let querySnapshot = await hustleIdeaBoxCollection.orderBy("createdAt", "desc").get();
+                if (querySnapshot.empty && legacyIdeaBoxCollection) {
+                    const legacySnap = await legacyIdeaBoxCollection.orderBy("createdAt", "desc").get();
+                    legacySnap.forEach(async doc => {
+                        ideaTasks.push({ id: doc.id, ...doc.data() });
+                        await hustleIdeaBoxCollection.doc(doc.id).set(doc.data());
+                        await legacyIdeaBoxCollection.doc(doc.id).delete().catch(()=>{});
+                    });
+                    console.log(`Migrated ${legacySnap.size} legacy idea tasks.`);
+                    return ideaTasks;
+                }
                 // Extract data from each document
                 querySnapshot.forEach((doc) => {
                     ideaTasks.push({ id: doc.id, ...doc.data() }); // Include the document ID
@@ -650,6 +685,9 @@
             try {
                 // Delete the document with the specified ID
                 await hustleIdeaBoxCollection.doc(taskId).delete();
+                if (legacyIdeaBoxCollection) {
+                    await legacyIdeaBoxCollection.doc(taskId).delete().catch(()=>{});
+                }
                 console.log("DEBUG: Idea task deleted successfully from Firestore: ", taskId);
             } catch (error) {
                 // Log detailed error information if deleting fails
@@ -1563,6 +1601,9 @@
             };
             try {
                 await hustleArchiveCollection.add(archiveData); // Add to archive collection
+                if (legacyArchiveCollection) {
+                    await legacyArchiveCollection.add(archiveData).catch(()=>{});
+                }
                 console.log("Task archived to Firestore:", taskData.text);
             } catch (error) {
                 console.error("Error archiving task to Firestore:", error);
@@ -1582,8 +1623,12 @@
 
             try {
                 // Query for documents in 'hustle_tasks' with IDs (dates) less than today's date
-                const querySnapshot = await hustleTasksCollection.where(firebase.firestore.FieldPath.documentId(), "<", todayDateStr).get();
-
+                let usingLegacy = false;
+                let querySnapshot = await hustleTasksCollection.where(firebase.firestore.FieldPath.documentId(), "<", todayDateStr).get();
+                if (querySnapshot.empty && legacyTasksCollection) {
+                    querySnapshot = await legacyTasksCollection.where(firebase.firestore.FieldPath.documentId(), "<", todayDateStr).get();
+                    if (!querySnapshot.empty) usingLegacy = true;
+                }
                 if (querySnapshot.empty) {
                     console.log("No past dates found with tasks to archive.");
                     return false; // Nothing to do
@@ -1622,7 +1667,7 @@
                                 archivePromises.push(archiveTaskToFirestore(taskData));
                             });
                             // Update the original date document in the batch to remove the archived tasks
-                            const docRef = hustleTasksCollection.doc(dateString);
+                            const docRef = usingLegacy ? legacyTasksCollection.doc(dateString) : hustleTasksCollection.doc(dateString);
                             batch.update(docRef, { done: tasksToKeepInDone });
                             console.log(`Marked document ${dateString} for update in batch (removing archived tasks).`);
                         }
@@ -1692,7 +1737,10 @@
 
             try {
                 // Query the archive collection for tasks completed yesterday
-                const querySnapshot = await hustleArchiveCollection.where("completionDate", "==", yesterdayDateStr).get();
+                let querySnapshot = await hustleArchiveCollection.where("completionDate", "==", yesterdayDateStr).get();
+                if (querySnapshot.empty && legacyArchiveCollection) {
+                    querySnapshot = await legacyArchiveCollection.where("completionDate", "==", yesterdayDateStr).get();
+                }
                 const tasksForYesterday = [];
                 querySnapshot.forEach(doc => {
                     tasksForYesterday.push(doc.data());
@@ -1881,77 +1929,47 @@
         }
 
         // --- Initialization ---
-        // Runs when the DOM content is fully loaded
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("DOM fully loaded and parsed.");
-
-            // Initial setup for time display and quote
-            updateTimeDisplay();
-            setInterval(updateTimeDisplay, 60000); // Update time every minute
-            displayMotivationalQuote();
-
-            // --- Crucial Check: Ensure Firebase initialized ---
-            if (!db) {
-                console.error("DB not initialized. Aborting further setup.");
-                // Display error message prominently if DB connection failed earlier
-                if(selectedDateDisplay) selectedDateDisplay.textContent = "Database Connection Failed! Check Config.";
-                // Disable interaction if DB failed
-                document.querySelectorAll('button, input').forEach(el => el.disabled = true);
-                return; // Stop initialization
-            }
-            // --- End DB Check ---
-
+        async function initializeAfterAuth() {
             console.log("Database connection available. Proceeding...");
 
-            // Run the archiving process for past dates on load
             try {
                  await runArchivingProcess();
             } catch (error) {
                  console.error("Error during initial archiving:", error);
             }
 
-            // Load Idea Box tasks first
-             try {
+            try {
                  await displayIdeaTasks();
-             } catch(error) {
-                 // Error is logged within loadIdeaTasksFromFirestore now
-                 console.error("Failed initial idea task load (caught in DOMContentLoaded):", error);
-             }
-
-
-            // Load tasks for the current date
-            const currentBostonDate = getCurrentDateString(BOSTON_TIMEZONE);
-            if (dateSelector) {
-                dateSelector.value = currentBostonDate; // Set date picker to today
-                try {
-                    await displayTasksForDate(currentBostonDate); // Load today's tasks
-                } catch (error) {
-                    // Error is logged within loadTasksFromFirestore and handled in displayTasksForDate
-                    console.error("Failed initial daily task load (caught in DOMContentLoaded):", error);
-                }
-                 // Add event listener for date changes *after* initial load attempt
-                dateSelector.addEventListener('change', (event) => {
-                    displayTasksForDate(event.target.value); // Load tasks for the newly selected date
-                });
-            } else {
-                // Fallback if date selector element isn't found (shouldn't happen)
-                console.error("Date selector element not found.");
-                try { await displayTasksForDate(currentBostonDate); } catch (error) { /* Handled in displayTasksForDate */ }
+            } catch(error) {
+                 console.error("Failed initial idea task load (caught in initialization):", error);
             }
 
-            // Load and display the summary for yesterday
+            const currentBostonDate = getCurrentDateString(BOSTON_TIMEZONE);
+            if (dateSelector) {
+                dateSelector.value = currentBostonDate;
+                try {
+                    await displayTasksForDate(currentBostonDate);
+                } catch (error) {
+                    console.error("Failed initial daily task load (caught in initialization):", error);
+                }
+                dateSelector.addEventListener('change', (event) => {
+                    displayTasksForDate(event.target.value);
+                });
+            } else {
+                console.error("Date selector element not found.");
+                try { await displayTasksForDate(currentBostonDate); } catch (error) { }
+            }
+
             try {
                  await displayLatestSummary();
             } catch(error) {
                  console.error("Failed to display latest summary:", error);
             }
 
-            // --- Add Event Listeners for Forms and Modals ---
             const addTaskBtnLocal = document.getElementById('add-task-btn');
             if (addTaskBtnLocal) {
                 addTaskBtnLocal.addEventListener('click', addTask);
-                // Allow adding daily tasks by pressing Enter in form fields
-                const dailyTaskInputs = ['new-task-input', 'new-task-start-time', 'new-task-end-time'];
+                const dailyTaskInputs = ['new-task-input','new-task-start-time','new-task-end-time'];
                 dailyTaskInputs.forEach(id => {
                     const input = document.getElementById(id);
                     if (input) input.addEventListener('keypress', (event) => { if (event.key === 'Enter') addTask(); });
@@ -1960,27 +1978,54 @@
 
             if (addIdeaTaskBtn && ideaTaskInput) {
                 addIdeaTaskBtn.addEventListener('click', addIdeaTask);
-                // Allow adding idea tasks by pressing Enter in the input field
                 ideaTaskInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') addIdeaTask(); });
             } else { console.error("Add idea task button or input not found."); }
 
-            // Add listeners for modal buttons
             if (modalSaveBtn) modalSaveBtn.addEventListener('click', handleModalSave);
             if (modalCancelBtn) modalCancelBtn.addEventListener('click', hideTimePrompt);
 
-            // --- Start Background Intervals ---
-            // Start interval to check for tasks whose start time has passed
-            if (taskCheckIntervalId) clearInterval(taskCheckIntervalId); // Clear existing if any
+            if (taskCheckIntervalId) clearInterval(taskCheckIntervalId);
             taskCheckIntervalId = setInterval(checkAndMoveTasks, TASK_CHECK_INTERVAL);
             console.log(`Started task check interval (${TASK_CHECK_INTERVAL / 1000}s). ID: ${taskCheckIntervalId}`);
 
-            // Start interval to update progress timers for 'In Progress' tasks
-            if (progressTimerIntervalId) clearInterval(progressTimerIntervalId); // Clear existing if any
-            if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId); // Clear existing if any
+            if (progressTimerIntervalId) clearInterval(progressTimerIntervalId);
+            if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId);
             progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
             console.log(`Started progress timer interval (${TIMER_UPDATE_INTERVAL / 1000}s). ID: ${progressTimerIntervalId}`);
 
             console.log("Initialization complete.");
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("DOM fully loaded and parsed.");
+
+            updateTimeDisplay();
+            setInterval(updateTimeDisplay, 60000);
+            displayMotivationalQuote();
+
+            if (!db) {
+                console.error("DB not initialized. Aborting further setup.");
+                if(selectedDateDisplay) selectedDateDisplay.textContent = "Database Connection Failed! Check Config.";
+                document.querySelectorAll('button, input').forEach(el => el.disabled = true);
+                return;
+            }
+
+            firebase.auth().onAuthStateChanged(async (user) => {
+                if (user) {
+                    userUID = user.uid;
+                    hustleTasksCollection = db.collection(`users/${userUID}/hustle_tasks`);
+                    hustleIdeaBoxCollection = db.collection(`users/${userUID}/hustle_ideaBoxTasks`);
+                    hustleArchiveCollection = db.collection(`users/${userUID}/hustle_archive`);
+                    console.log('Authenticated as', userUID);
+                    await initializeAfterAuth();
+                } else {
+                    try {
+                        await firebase.auth().signInAnonymously();
+                    } catch (error) {
+                        console.error('Anonymous sign-in failed:', error);
+                    }
+                }
+            });
         });
     </script>
 
