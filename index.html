@@ -7,6 +7,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -185,7 +186,30 @@
 </head>
 <body class="p-4 md:p-8">
 
-    <div id="main-content-wrapper">
+    <div id="auth-container" class="max-w-md mx-auto mb-8 p-4 bg-white text-gray-900 rounded shadow" style="display:none;">
+        <div id="login-section" class="mb-6">
+            <h2 class="text-xl font-bold mb-2">Login</h2>
+            <input type="email" id="login-username" placeholder="Username" class="border p-2 w-full mb-2">
+            <input type="password" id="login-password" placeholder="Password" class="border p-2 w-full mb-2">
+            <label class="inline-flex items-center mb-2">
+                <input type="checkbox" id="login-remember" class="mr-2"> Remember for the day
+            </label>
+            <button id="login-btn" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Login</button>
+        </div>
+        <div id="signup-section">
+            <h2 class="text-xl font-bold mb-2">Create Account</h2>
+            <input type="text" id="signup-nickname" placeholder="Nickname" class="border p-2 w-full mb-2">
+            <input type="email" id="signup-username" placeholder="Username" class="border p-2 w-full mb-2">
+            <input type="password" id="signup-password" placeholder="Password" class="border p-2 w-full mb-2">
+            <label class="inline-flex items-center mb-2">
+                <input type="checkbox" id="signup-remember" class="mr-2"> Remember for the day
+            </label>
+            <button id="signup-btn" class="bg-green-600 text-white px-4 py-2 rounded w-full">Create Account</button>
+        </div>
+    </div>
+    <button id="sign-out-btn" class="bg-red-600 text-white px-4 py-2 rounded mb-4 hidden">Sign Out</button>
+
+    <div id="main-content-wrapper" style="display:none;">
 
         <h1 id="main-title" class="text-5xl font-extrabold text-center mb-2">SNG's Hustle Board</h1>
         <p id="subtitle" class="text-center text-lg mb-6">Plan & Conquer.</p>
@@ -362,7 +386,21 @@
         const modalStartTimeInput = document.getElementById('modal-start-time');
         const modalEndTimeInput = document.getElementById('modal-end-time');
         const modalSaveBtn = document.getElementById('modal-save-btn');
-        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+        // Authentication elements
+        const authContainer = document.getElementById('auth-container');
+        const loginUsernameInput = document.getElementById('login-username');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginRemember = document.getElementById('login-remember');
+        const loginBtn = document.getElementById('login-btn');
+        const signupNicknameInput = document.getElementById('signup-nickname');
+        const signupUsernameInput = document.getElementById('signup-username');
+        const signupPasswordInput = document.getElementById('signup-password');
+        const signupRemember = document.getElementById('signup-remember');
+        const signupBtn = document.getElementById('signup-btn');
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const mainContentWrapper = document.getElementById('main-content-wrapper');
 
         // --- Confetti Setup ---
         let myConfetti = null;
@@ -1840,7 +1878,7 @@
         }
 
         // Updates timers for all tasks currently in the 'In Progress' column
-        function updateInProgressTimers() {
+function updateInProgressTimers() {
             const inProgressColumn = document.getElementById('inprogress');
             const tasksContainer = inProgressColumn?.querySelector('.tasks-container');
             if (!tasksContainer) return; // Exit if container not found
@@ -1878,12 +1916,74 @@
                     console.log("Stopping last minute timer, restarting regular interval (15s).");
                 }
             }
+}
+
+        // --- Authentication Helpers ---
+        function endOfTodayTimestamp() {
+            const now = new Date();
+            const end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+            return end.getTime();
         }
 
-        // --- Initialization ---
-        // Runs when the DOM content is fully loaded
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("DOM fully loaded and parsed.");
+        function handleRemember(checked) {
+            if (checked) {
+                localStorage.setItem('sessionExpiry', endOfTodayTimestamp());
+            } else {
+                localStorage.removeItem('sessionExpiry');
+            }
+        }
+
+        async function registerAccount() {
+            const nickname = signupNicknameInput.value.trim();
+            const email = (signupUsernameInput.value.trim() || nickname);
+            const password = signupPasswordInput.value;
+            try {
+                await firebase.auth().createUserWithEmailAndPassword(email, password);
+                if (firebase.auth().currentUser && nickname) {
+                    await firebase.auth().currentUser.updateProfile({ displayName: nickname });
+                }
+                handleRemember(signupRemember.checked);
+                showMainContent();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function loginAccount() {
+            const email = loginUsernameInput.value.trim();
+            const password = loginPasswordInput.value;
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                handleRemember(loginRemember.checked);
+                showMainContent();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function signOutUser() {
+            firebase.auth().signOut().finally(() => {
+                localStorage.removeItem('sessionExpiry');
+                authContainer.style.display = 'block';
+                mainContentWrapper.style.display = 'none';
+                signOutBtn.classList.add('hidden');
+            });
+        }
+
+        let boardInitialized = false;
+        function showMainContent() {
+            authContainer.style.display = 'none';
+            mainContentWrapper.style.display = 'block';
+            signOutBtn.classList.remove('hidden');
+            if (!boardInitialized) {
+                initializeBoard();
+                boardInitialized = true;
+            }
+        }
+
+        async function initializeBoard() {
+            console.log("Initializing board...");
 
             // Initial setup for time display and quote
             updateTimeDisplay();
@@ -1981,6 +2081,22 @@
             console.log(`Started progress timer interval (${TIMER_UPDATE_INTERVAL / 1000}s). ID: ${progressTimerIntervalId}`);
 
             console.log("Initialization complete.");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (loginBtn) loginBtn.addEventListener('click', loginAccount);
+            if (signupBtn) signupBtn.addEventListener('click', registerAccount);
+            if (signOutBtn) signOutBtn.addEventListener('click', signOutUser);
+
+            firebase.auth().onAuthStateChanged(user => {
+                const expiry = parseInt(localStorage.getItem('sessionExpiry') || '0', 10);
+                if (user && Date.now() < expiry) {
+                    showMainContent();
+                } else {
+                    authContainer.style.display = 'block';
+                    mainContentWrapper.style.display = 'none';
+                }
+            });
         });
     </script>
 
