@@ -11,6 +11,7 @@ const ASSETS_TO_CACHE = [
   basePath + 'manifest.json',
   basePath + 'icon-192.png',
   basePath + 'icon-512.png',
+  basePath + 'app.js',
   // External resources don't need path adjustment
   'https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js',
