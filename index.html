@@ -181,10 +181,25 @@
         #modal-save-btn:hover { background-color: var(--button-secondary-hover); transform: scale(1.03); }
         #modal-cancel-btn { background-color: var(--button-cancel-bg); color: white; }
         #modal-cancel-btn:hover { background-color: var(--button-cancel-hover); transform: scale(1.03); }
+        /* Authentication Overlay */
+        #auth-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        #auth-overlay.active { display: flex; }
+        #auth-overlay .auth-form { background-color: white; padding: 1.5rem; border-radius: 0.5rem; width: 90%; max-width: 320px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        #auth-overlay input { width: 100%; margin-top: 0.5rem; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; color: #1e293b; }
+        #auth-overlay label { color: #1e293b; font-weight: 600; margin-top: 0.75rem; display: flex; align-items: center; }
+        #auth-overlay button { margin-top: 0.75rem; background-color: #2563eb; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; width: 100%; }
 
     </style>
 </head>
 <body class="p-4 md:p-8">
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-form">
+            <input type="email" id="auth-email" placeholder="Email">
+            <input type="password" id="auth-password" placeholder="Password">
+            <label><input type="checkbox" id="remember-for-day" class="mr-2">Remember for the day</label>
+            <button id="login-button">Login</button>
+        </div>
+    </div>
 
     <div id="main-content-wrapper">
 
@@ -297,6 +312,7 @@
             }
             // Get Firestore instance
             db = firebase.firestore();
+            const auth = firebase.auth();
             console.log("Firebase initialized successfully with sng-hustle-board-standalone config.");
         } catch (error) {
             console.error("Firebase initialization failed:", error);
@@ -369,6 +385,29 @@
         const modalEndTimeInput = document.getElementById('modal-end-time');
         const modalSaveBtn = document.getElementById('modal-save-btn');
         const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const authOverlay = document.getElementById("auth-overlay");
+        const loginButton = document.getElementById("login-button");
+        const rememberCheckbox = document.getElementById("remember-for-day");
+        const emailInput = document.getElementById("auth-email");
+        const passwordInput = document.getElementById("auth-password");
+        if (loginButton) {
+            loginButton.addEventListener("click", async () => {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                if (!email || !password) { alert("Please enter email and password."); return; }
+                try {
+                    const cred = await auth.signInWithEmailAndPassword(email, password);
+                    authOverlay.classList.remove("active");
+                    if (rememberCheckbox.checked) {
+                        storeRememberForDay(cred.user.uid, email, password);
+                    } else {
+                        clearRememberForDay();
+                    }
+                } catch (err) {
+                    alert("Login failed: " + err.message);
+                }
+            });
+        }
 
         // --- Confetti Setup ---
         let myConfetti = null;
@@ -1909,6 +1948,56 @@
                  }
             });
 
+        // --- Authentication Helpers ---
+        function storeRememberForDay(uid, email, password) {
+            const expires = new Date();
+            expires.setHours(23,59,59,999);
+            const data = { uid: uid, email: email, password: password, expiresAt: expires.getTime() };
+            localStorage.setItem("rememberForDay", JSON.stringify(data));
+            scheduleSignOut(data.expiresAt);
+        }
+        function clearRememberForDay() {
+            localStorage.removeItem("rememberForDay");
+        }
+        function scheduleSignOut(expiration) {
+            const delay = expiration - Date.now();
+            if (delay > 0) {
+                setTimeout(() => {
+                    auth.signOut().catch(err => console.error("Auto sign-out failed", err));
+                    clearRememberForDay();
+                }, delay);
+            } else {
+                auth.signOut().catch(err => console.error("Auto sign-out failed", err));
+                clearRememberForDay();
+            }
+        }
+        async function handleAuthOnLoad() {
+            const entryStr = localStorage.getItem("rememberForDay");
+            if (!entryStr) {
+                authOverlay.classList.add("active");
+                return;
+            }
+            try {
+                const entry = JSON.parse(entryStr);
+                if (entry.expiresAt && entry.expiresAt > Date.now()) {
+                    if (!auth.currentUser) {
+                        await auth.signInWithEmailAndPassword(entry.email, entry.password);
+                    } else {
+                        await auth.currentUser.getIdToken(true);
+                    }
+                    authOverlay.classList.remove("active");
+                    scheduleSignOut(entry.expiresAt);
+                } else {
+                    clearRememberForDay();
+                    authOverlay.classList.add("active");
+                }
+            } catch (e) {
+                console.error("Failed to parse rememberForDay", e);
+                clearRememberForDay();
+                authOverlay.classList.add("active");
+            }
+        }
+
             // Adjust update interval based on whether any task is in its last minute
             if (isInLastMinute && !lastMinuteIntervalId) {
                 // Switch to faster (1-second) updates
@@ -1931,6 +2020,11 @@
         // --- Initialization ---
         async function initializeAfterAuth() {
             console.log("Database connection available. Proceeding...");
+            await handleAuthOnLoad();
+            if (!auth.currentUser) {
+                console.log("Waiting for user authentication.");
+                return;
+            }
 
             try {
                  await runArchivingProcess();
