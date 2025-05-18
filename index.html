@@ -188,16 +188,25 @@
         #auth-overlay input { width: 100%; margin-top: 0.5rem; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; color: #1e293b; }
         #auth-overlay label { color: #1e293b; font-weight: 600; margin-top: 0.75rem; display: flex; align-items: center; }
         #auth-overlay button { margin-top: 0.75rem; background-color: #2563eb; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; width: 100%; }
+        #auth-overlay a { color: #2563eb; text-decoration: underline; font-size: 0.875rem; }
 
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div id="auth-overlay" class="auth-overlay">
-        <div class="auth-form">
-            <input type="email" id="auth-email" placeholder="Email">
+        <div class="auth-form" id="login-form">
+            <input type="text" id="login-username" placeholder="Username">
             <input type="password" id="auth-password" placeholder="Password">
             <label><input type="checkbox" id="remember-for-day" class="mr-2">Remember for the day</label>
             <button id="login-button">Login</button>
+            <p class="text-center mt-2"><a href="#" id="show-signup">Create account</a></p>
+        </div>
+        <div class="auth-form" id="signup-form" style="display:none;">
+            <input type="text" id="signup-nickname" placeholder="Nick Name">
+            <input type="text" id="signup-username" placeholder="User Name (optional)">
+            <input type="password" id="signup-password" placeholder="Password">
+            <button id="signup-button">Create Account</button>
+            <p class="text-center mt-2"><a href="#" id="show-login">Back to login</a></p>
         </div>
     </div>
 
@@ -387,24 +396,64 @@
         const modalCancelBtn = document.getElementById('modal-cancel-btn');
         const authOverlay = document.getElementById("auth-overlay");
         const loginButton = document.getElementById("login-button");
+        const signupButton = document.getElementById("signup-button");
+        const showSignup = document.getElementById("show-signup");
+        const showLogin = document.getElementById("show-login");
         const rememberCheckbox = document.getElementById("remember-for-day");
-        const emailInput = document.getElementById("auth-email");
+        const usernameInput = document.getElementById("login-username");
         const passwordInput = document.getElementById("auth-password");
+        const signupNickname = document.getElementById("signup-nickname");
+        const signupUsername = document.getElementById("signup-username");
+        const signupPassword = document.getElementById("signup-password");
+        const loginForm = document.getElementById("login-form");
+        const signupForm = document.getElementById("signup-form");
+
+        function usernameToEmail(name) {
+            return `${name}@local.user`;
+        }
+
+        if (showSignup && showLogin && loginForm && signupForm) {
+            showSignup.addEventListener("click", (e) => { e.preventDefault(); loginForm.style.display = 'none'; signupForm.style.display = 'block'; });
+            showLogin.addEventListener("click", (e) => { e.preventDefault(); signupForm.style.display = 'none'; loginForm.style.display = 'block'; });
+        }
+
         if (loginButton) {
             loginButton.addEventListener("click", async () => {
-                const email = emailInput.value.trim();
+                const username = usernameInput.value.trim();
                 const password = passwordInput.value;
-                if (!email || !password) { alert("Please enter email and password."); return; }
+                if (!username || !password) { alert("Please enter username and password."); return; }
                 try {
+                    const email = usernameToEmail(username);
                     const cred = await auth.signInWithEmailAndPassword(email, password);
                     authOverlay.classList.remove("active");
                     if (rememberCheckbox.checked) {
-                        storeRememberForDay(cred.user.uid, email, password);
+                        storeRememberForDay(cred.user.uid, username, password);
                     } else {
                         clearRememberForDay();
                     }
                 } catch (err) {
                     alert("Login failed: " + err.message);
+                }
+            });
+        }
+
+        if (signupButton) {
+            signupButton.addEventListener("click", async () => {
+                const nick = signupNickname.value.trim();
+                let user = signupUsername.value.trim();
+                const pass = signupPassword.value;
+                if (!nick || !pass) { alert("Please enter nickname and password."); return; }
+                if (!user) { user = nick; }
+                try {
+                    const email = usernameToEmail(user);
+                    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+                    await cred.user.updateProfile({ displayName: nick });
+                    if (db) {
+                        await db.collection('users').doc(cred.user.uid).set({ nickname: nick, username: user });
+                    }
+                    authOverlay.classList.remove("active");
+                } catch (err) {
+                    alert("Account creation failed: " + err.message);
                 }
             });
         }
@@ -1949,10 +1998,10 @@
             });
 
         // --- Authentication Helpers ---
-        function storeRememberForDay(uid, email, password) {
+        function storeRememberForDay(uid, username, password) {
             const expires = new Date();
             expires.setHours(23,59,59,999);
-            const data = { uid: uid, email: email, password: password, expiresAt: expires.getTime() };
+            const data = { uid: uid, username: username, password: password, expiresAt: expires.getTime() };
             localStorage.setItem("rememberForDay", JSON.stringify(data));
             scheduleSignOut(data.expiresAt);
         }
@@ -1981,7 +2030,8 @@
                 const entry = JSON.parse(entryStr);
                 if (entry.expiresAt && entry.expiresAt > Date.now()) {
                     if (!auth.currentUser) {
-                        await auth.signInWithEmailAndPassword(entry.email, entry.password);
+                        const email = usernameToEmail(entry.username);
+                        await auth.signInWithEmailAndPassword(email, entry.password);
                     } else {
                         await auth.currentUser.getIdToken(true);
                     }
