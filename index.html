@@ -543,7 +543,7 @@
             const legacyDocRef = legacyTasksCollection ? legacyTasksCollection.doc(dateString) : null;
 
             try {
-                console.log(`Workspaceing document: ${docRef.path}`);
+                console.log(`Fetching document: ${docRef.path}`);
                 const docSnap = await docRef.get(); // Attempt to get the document
 
                 if (docSnap.exists) { // Check the boolean property for Compat SDK
