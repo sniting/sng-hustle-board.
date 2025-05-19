@@ -564,7 +564,37 @@
         }
 
 
-        // --- Data Management Functions (Firestore) ---
+        // --- Data Management Functions (Firestore & Local Storage) ---
+
+        // Save tasks for a date to localStorage
+        function saveTasksToLocalStorage(dateString, tasksForDate) {
+            try {
+                localStorage.setItem(`tasks-${dateString}`, JSON.stringify(tasksForDate));
+            } catch (e) {
+                console.error('Failed to save tasks to localStorage:', e);
+            }
+        }
+
+        // Load tasks for a date from localStorage
+        function loadTasksFromLocalStorage(dateString) {
+            try {
+                const data = localStorage.getItem(`tasks-${dateString}`);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    return {
+                        todo: Array.isArray(parsed.todo) ? parsed.todo : [],
+                        inprogress: Array.isArray(parsed.inprogress) ? parsed.inprogress : [],
+                        done: Array.isArray(parsed.done) ? parsed.done : []
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to load tasks from localStorage:', e);
+            }
+            return { todo: [], inprogress: [], done: [] };
+        }
+
+        /**
+         * Loads tasks for a specific date from the 'hustle_tasks' collection.
 
         /**
          * Loads tasks for a specific date from the 'hustle_tasks' collection.
@@ -607,6 +637,7 @@
                         done: Array.isArray(data.done) ? data.done : []
                     };
                     console.log(`Successfully processed tasks for ${dateString}.`);
+                    saveTasksToLocalStorage(dateString, tasks);
                     return tasks;
                 } else if (legacyDocRef) {
                     const legacySnap = await legacyDocRef.get();
@@ -614,18 +645,20 @@
                         const legacyData = legacySnap.data() || {};
                         await docRef.set(legacyData);
                         console.log(`Migrated legacy data for ${dateString} to user collection.`);
-                        return {
+                        const migrated = {
                             todo: Array.isArray(legacyData.todo) ? legacyData.todo : [],
                             inprogress: Array.isArray(legacyData.inprogress) ? legacyData.inprogress : [],
                             done: Array.isArray(legacyData.done) ? legacyData.done : []
                         };
+                        saveTasksToLocalStorage(dateString, migrated);
+                        return migrated;
                     } else {
                         console.log(`No document found for ${dateString}, returning empty task lists.`);
-                        return { todo: [], inprogress: [], done: [] };
+                        return loadTasksFromLocalStorage(dateString);
                     }
                 } else {
                     console.log(`No document found for ${dateString}, returning empty task lists.`);
-                    return { todo: [], inprogress: [], done: [] };
+                    return loadTasksFromLocalStorage(dateString);
                 }
             } catch (error) {
                 // Log detailed error information if the fetch fails
@@ -634,10 +667,10 @@
                 console.error("Error Message:", error.message);
 
                 // Show a user-friendly alert
-                alert(`Failed to load tasks for ${formatDisplayDate(dateString)}. Check console for details (F12 -> Console).`);
+                alert(`Failed to load tasks for ${formatDisplayDate(dateString)}. Check console for details (F12 -> Console). Using local data if available.`);
 
-                // Re-throw the error so the calling function knows it failed
-                throw error;
+                // Fallback to any tasks stored locally
+                return loadTasksFromLocalStorage(dateString);
             }
         }
 
@@ -667,6 +700,7 @@
                  if (legacyDocRef) {
                      try { await legacyDocRef.delete(); } catch(e) { /* ignore */ }
                  }
+                 saveTasksToLocalStorage(dateString, tasksForDate);
                  console.log("Daily tasks successfully saved for date:", dateString);
              } catch (error) {
                  // Log detailed error information if saving fails
@@ -674,6 +708,8 @@
                  console.error("Error Code:", error.code);
                  console.error("Error Message:", error.message);
                  alert(`Error saving daily tasks for ${formatDisplayDate(dateString)}. Check console for details.`);
+                 // Always save locally even if Firestore fails
+                 saveTasksToLocalStorage(dateString, tasksForDate);
              }
          }
 
@@ -1218,14 +1254,29 @@
          * @param {string} dateString - The date in YYYY-MM-DD format.
          */
         async function displayTasksForDate(dateString) {
-            // Check Firestore initialization
-            if (!db) {
-                selectedDateDisplay.textContent = "Database not connected.";
-                return;
-            }
             currentSelectedDate = dateString; // Update the global state
             const formattedDate = formatDisplayDate(dateString); // Format for display
             selectedDateDisplay.textContent = `Loading tasks for ${formattedDate}...`; // Update UI
+            if (!db) {
+                console.warn("Database not connected. Loading tasks from local storage.");
+                const tasksForDay = loadTasksFromLocalStorage(dateString);
+                if (dateSelector) dateSelector.value = dateString;
+                clearBoard();
+                Object.keys(tasksForDay).forEach(columnId => {
+                    const columnElement = document.getElementById(columnId);
+                    const tasksContainer = columnElement?.querySelector('.tasks-container');
+                    if (tasksContainer) {
+                        tasksForDay[columnId].forEach(taskData => {
+                            const taskElement = createTaskElement(taskData, columnId);
+                            tasksContainer.appendChild(taskElement);
+                        });
+                    }
+                });
+                selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate} (Offline)`;
+                checkAndMoveTasks();
+                updateInProgressTimers();
+                return;
+            }
             if (dateSelector) dateSelector.value = dateString; // Sync date picker input
             clearBoard(); // Clear existing tasks from the board
 
@@ -1257,9 +1308,22 @@
             } catch (error) {
                 // Error is logged in detail within loadTasksFromFirestore
                 console.error("Error caught by displayTasksForDate:", error);
-                // Update display to indicate failure (alert was already shown)
-                selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate} (Load Failed)`;
-                // Avoid running checks/timers if the load failed
+                // Fallback to tasks stored locally
+                const tasksForDay = loadTasksFromLocalStorage(dateString);
+                selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate} (Offline)`;
+
+                Object.keys(tasksForDay).forEach(columnId => {
+                    const columnElement = document.getElementById(columnId);
+                    const tasksContainer = columnElement?.querySelector('.tasks-container');
+                    if (tasksContainer) {
+                        tasksForDay[columnId].forEach(taskData => {
+                            const taskElement = createTaskElement(taskData, columnId);
+                            tasksContainer.appendChild(taskElement);
+                        });
+                    }
+                });
+                checkAndMoveTasks();
+                updateInProgressTimers();
             }
         }
 
@@ -1268,8 +1332,8 @@
          * for the currently selected date.
          */
         async function saveCurrentBoardState() {
-             // Check Firestore initialization
-             if (!db || !hustleTasksCollection) { console.error("Firestore 'hustle_tasks' collection not initialized."); return; }
+             // Even if Firestore isn't available, allow saving locally
+             const firestoreAvailable = db && hustleTasksCollection;
              // Check if a date is selected
              if (!currentSelectedDate) { console.log("No date selected, cannot save daily state."); return; }
 
@@ -1309,9 +1373,13 @@
                  }
              });
 
-             // Call the function to save the structured data to Firestore
-             await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate);
-         }
+            // Save to Firestore if available, otherwise just local storage
+            if (firestoreAvailable) {
+                await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate);
+            } else {
+                saveTasksToLocalStorage(currentSelectedDate, tasksForCurrentDate);
+            }
+        }
 
         /**
          * Handles adding a new daily task from the form to the 'To Do' column.
@@ -2149,9 +2217,22 @@
             displayMotivationalQuote();
 
             if (!db) {
-                console.error("DB not initialized. Aborting further setup.");
-                if(selectedDateDisplay) selectedDateDisplay.textContent = "Database Connection Failed! Check Config.";
-                document.querySelectorAll('button, input').forEach(el => el.disabled = true);
+                console.error("DB not initialized. Offline mode.");
+                if(selectedDateDisplay) selectedDateDisplay.textContent = "Offline Mode";
+                const offlineDate = getCurrentDateString(BOSTON_TIMEZONE);
+                if (dateSelector) {
+                    dateSelector.value = offlineDate;
+                    dateSelector.addEventListener('change', (event) => {
+                        displayTasksForDate(event.target.value);
+                    });
+                }
+                displayTasksForDate(offlineDate);
+                if (taskCheckIntervalId) clearInterval(taskCheckIntervalId);
+                taskCheckIntervalId = setInterval(checkAndMoveTasks, TASK_CHECK_INTERVAL);
+                if (progressTimerIntervalId) clearInterval(progressTimerIntervalId);
+                if (lastMinuteIntervalId) clearInterval(lastMinuteIntervalId);
+                progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
+                console.log("Initialization complete (offline).");
                 return;
             }
 
