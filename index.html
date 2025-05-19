@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNG's Funky 3D Hustle Board</title>
 
+    <!-- GitHub Pages PWA Fix for standalone mode -->
+    <script type="text/javascript">
+        (function() {
+            // If the app is being launched as a PWA
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                var l = window.location;
+                var redirectURL = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/';
+                
+                // If we're in a subfolder of the GitHub repo, add it to the path
+                var pathParts = l.pathname.split('/');
+                if (pathParts.length > 2 && pathParts[1] !== "") {
+                    redirectURL += pathParts[1] + '/';
+                }
+                
+                // Only redirect if we're at a GitHub 404 page
+                if (document.title.includes("404") || l.pathname.includes("/404.html") || 
+                    l.search.includes('?p=/')) {
+                    window.location.replace(redirectURL);
+                }
+            }
+        })();
+    </script>
+
     <!-- PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2330,7 +2353,6 @@
                                 dayWasModified = true;
                             } else {
                                 // Keep tasks without a completion date in the 'done' list (shouldn't happen ideally)
-                                // Keep tasks without a completion date in the 'done' list (shouldn't happen ideally)
                                 tasksToKeepInDone.push(taskData);
                                 console.warn(`Task in 'done' column for ${dateString} lacks completion date:`, taskData.text);
                             }
@@ -2681,14 +2703,22 @@
         // --- Service Worker Registration ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                const swPath = new URL('service-worker.js', window.location.href).pathname;
-                navigator.serviceWorker.register(swPath)
-                    .then(reg => {
-                        console.log('Service Worker registration successful. Scope:', reg.scope);
-                    })
-                    .catch(err => {
-                        console.error('Service Worker registration failed:', err);
-                    });
+                // Get the base path - handles GitHub Pages repo paths
+                let basePath = './';
+                const pathSegments = window.location.pathname.split('/');
+                if (window.location.hostname.includes('github.io') && pathSegments.length > 2) {
+                    basePath = '/' + pathSegments[1] + '/';
+                }
+                
+                navigator.serviceWorker.register('./service-worker.js', {
+                    scope: basePath
+                })
+                .then(reg => {
+                    console.log('Service Worker registration successful. Scope:', reg.scope);
+                })
+                .catch(err => {
+                    console.error('Service Worker registration failed:', err);
+                });
             });
         } else {
             console.warn('Service Workers not supported in this browser.');
