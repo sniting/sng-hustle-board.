@@ -4,7 +4,7 @@
 // This supports repositories with unusual names (e.g. with trailing dots)
 const basePath = self.location.pathname.replace(/service-worker\.js$/, '');
 
-const CACHE_NAME = 'sng-hustle-board-v1';
+const CACHE_NAME = 'sng-hustle-board-v2';
 const ASSETS_TO_CACHE = [
   basePath,
   basePath + 'index.html',
@@ -69,10 +69,13 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  // Prevent fetching data from Firestore or other external APIs from being cached by this logic
+  // Skip handling Firebase and Analytics requests
   const requestUrl = new URL(event.request.url);
-  if (requestUrl.hostname.includes('firestore.googleapis.com') || requestUrl.hostname.includes('firebaseio.com')) {
-      return; // Don't intercept Firestore requests
+  if (requestUrl.hostname.includes('firestore.googleapis.com') || 
+      requestUrl.hostname.includes('firebaseio.com') ||
+      requestUrl.hostname.includes('firebase-settings.crashlytics.com') ||
+      requestUrl.hostname.includes('google-analytics.com')) {
+      return; // Don't intercept Firebase requests
   }
   if (requestUrl.protocol === 'chrome-extension:') {
        return; // Don't intercept browser extension requests
@@ -150,31 +153,16 @@ self.addEventListener('notificationclick', (event) => {
       } else {
         // If no window is open for the app, open one at the base path
         console.log('[Service Worker] No existing client found, opening new window at:', basePath);
-        clients.openWindow(basePath).then(newClient => {
-            // You might want to send the FOCUS_TASK message to the new client once it's loaded
-            // This would require additional logic in the main app to listen for messages on load
-             if (taskId && newClient) {
-                 // Basic example: wait a bit and send message (might need more robust method)
-                 const messageInterval = setInterval(() => {
-                     if (newClient.document && newClient.document.readyState === 'complete') {
-                         newClient.postMessage({
-                              command: 'FOCUS_TASK',
-                              taskId: taskId
-                         });
-                         clearInterval(messageInterval);
-                     }
-                 }, 100); // Check every 100ms
-             }
-        });
+        clients.openWindow(basePath);
       }
     })
   );
 });
 
-// Listen for push events (currently not used by the main app, but the listener is here)
+// Listen for push events
 self.addEventListener('push', (event) => {
   console.log('[Service Worker] Push received');
-  // The structure for handling push data remains the same
+  
   if (event.data) {
     const data = event.data.json();
     console.log('[Service Worker] Push data:', data);
@@ -189,8 +177,6 @@ self.addEventListener('push', (event) => {
         taskText: data.taskText,
         timeUpdated: new Date().toISOString()
       },
-      // Actions are included but won't work without explicit handling in notificationclick
-      // and potentially communication back to the main app.
       actions: [
         {
           action: 'view',
@@ -215,7 +201,7 @@ self.addEventListener('push', (event) => {
   }
 });
 
-// Handle message events from the main app (used for periodic notifications)
+// Handle message events from the main app
 self.addEventListener('message', (event) => {
   console.log('[Service Worker] Message received:', event.data);
   // Handle task updates from the main app to update notifications
@@ -234,8 +220,6 @@ self.addEventListener('message', (event) => {
         taskText: taskData.text,
         timeUpdated: new Date().toISOString()
       },
-       // Actions are included but won't work without explicit handling in notificationclick
-       // and potentially communication back to the main app.
       actions: [
         {
           action: 'view',
@@ -248,11 +232,10 @@ self.addEventListener('message', (event) => {
       ]
     };
 
-     // Show the notification with a specific title
-     console.log('[Service Worker] Showing notification for task:', taskData.id);
+    // Show the notification with a specific title
+    console.log('[Service Worker] Showing notification for task:', taskData.id);
     event.waitUntil(
        self.registration.showNotification('Task in Progress Update', options) // Use a consistent title for updates
     );
   }
-   // You could add handlers for other message types here if needed
 });
