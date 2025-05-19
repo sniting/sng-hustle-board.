@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNG's Funky 3D Hustle Board</title>
 
+    <!-- PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SNG Board">
+    <link rel="apple-touch-icon" href="icon-192.png"> 
+    <meta name="theme-color" content="#f97316">
+    <link rel="manifest" href="manifest.json">
+    <link rel="shortcut icon" href="icon-192.png">
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
@@ -20,14 +29,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
-
-    <!-- PWA Support -->
-    <link rel="manifest" href="manifest.json"> 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SNG Board">
-    <link rel="apple-touch-icon" href="icon-192.png"> 
-    <meta name="theme-color" content="#f97316">
 
     <style>
         /* --- CSS Styles --- */
@@ -187,38 +188,179 @@
         #modal-save-btn:hover { background-color: var(--button-secondary-hover); transform: scale(1.03); }
         #modal-cancel-btn { background-color: var(--button-cancel-bg); color: white; }
         #modal-cancel-btn:hover { background-color: var(--button-cancel-hover); transform: scale(1.03); }
-        /* Authentication Overlay */
-        #auth-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        
+        /* Authentication Overlay Styling - Improved */
+        #auth-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background-color: rgba(0,0,0,0.7); 
+            backdrop-filter: blur(8px);
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 10000;
+        }
         #auth-overlay.active { display: flex; }
-        #auth-overlay .auth-form { background-color: white; padding: 1.5rem; border-radius: 0.5rem; width: 90%; max-width: 320px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-        #auth-overlay input { width: 100%; margin-top: 0.5rem; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; color: #1e293b; }
-        #auth-overlay label { color: #1e293b; font-weight: 600; margin-top: 0.75rem; display: flex; align-items: center; }
-        #auth-overlay button { margin-top: 0.75rem; background-color: #2563eb; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; width: 100%; }
-        #auth-overlay a { color: #2563eb; text-decoration: underline; font-size: 0.875rem; }
+        #auth-overlay .auth-form { 
+            background-color: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem; 
+            border-radius: 0.75rem; 
+            width: 90%; 
+            max-width: 340px; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            color: #f1f5f9;
+        }
+        #auth-overlay h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: white;
+        }
+        #auth-overlay input:not([type="checkbox"]) { 
+            width: 100%; 
+            margin-top: 0.75rem; 
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem; 
+            background-color: rgba(15, 23, 42, 0.8);
+            color: white;
+            margin-bottom: 1rem;
+        }
+        #auth-overlay input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        #auth-overlay label { 
+            color: #e2e8f0; 
+            font-weight: 500; 
+            margin-top: 0.75rem;
+            margin-bottom: 1.5rem;
+            display: flex; 
+            align-items: center; 
+        }
+        #auth-overlay label input[type="checkbox"] {
+            margin-right: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+        }
+        #auth-overlay button { 
+            margin-top: 0.75rem; 
+            background-color: var(--button-primary-bg); 
+            color: white; 
+            padding: 0.75rem 1rem; 
+            border: none; 
+            border-radius: 0.5rem; 
+            width: 100%;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+        #auth-overlay button:hover {
+            background-color: var(--button-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        #auth-overlay a { 
+            color: #93c5fd; 
+            text-decoration: underline; 
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+        #auth-overlay a:hover {
+            color: #bfdbfe;
+        }
+        #auth-overlay .text-center {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        #auth-error-message {
+            color: #f87171;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
 
+        /* Header with logout button */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+        }
+        #user-info {
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        #logout-button {
+            background-color: transparent;
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        #logout-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* Toast notification */
+        #toast-notification { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(100px); 
+            background-color: #1e293b; 
+            color: white; 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 0.5rem; 
+            z-index: 10001; 
+            opacity: 0; 
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; 
+            pointer-events: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        #toast-notification.show { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0); 
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div id="auth-overlay" class="auth-overlay">
+<body>
+    <!-- Authentication Overlay -->
+    <div id="auth-overlay" class="auth-overlay active">
         <div class="auth-form" id="login-form">
-            <input type="text" id="login-username" placeholder="Username">
-            <input type="password" id="auth-password" placeholder="Password">
+            <h2>Welcome Back</h2>
+            <div id="auth-error-message"></div>
+            <input type="email" id="login-email" placeholder="Email address" required>
+            <input type="password" id="auth-password" placeholder="Password" required>
             <label><input type="checkbox" id="remember-for-day" class="mr-2">Remember for the day</label>
             <button id="login-button">Login</button>
-            <p class="text-center mt-2"><a href="#" id="show-signup">Create account</a></p>
+            <p class="text-center mt-2"><a href="#" id="show-signup">Create new account</a></p>
         </div>
         <div class="auth-form" id="signup-form" style="display:none;">
-            <input type="text" id="signup-nickname" placeholder="Nick Name">
-            <input type="text" id="signup-username" placeholder="User Name (optional)">
-            <input type="password" id="signup-password" placeholder="Password">
-            <button id="signup-button">Create Account</button>
+            <h2>Create Account</h2>
+            <div id="signup-error-message"></div>
+            <input type="text" id="signup-nickname" placeholder="Your name" required>
+            <input type="email" id="signup-email" placeholder="Email address" required>
+            <input type="password" id="signup-password" placeholder="Password" required>
+            <button id="signup-button">Sign Up</button>
             <p class="text-center mt-2"><a href="#" id="show-login">Back to login</a></p>
         </div>
     </div>
 
-    <div id="main-content-wrapper">
-
-        <h1 id="main-title" class="text-5xl font-extrabold text-center mb-2">SNG's Hustle Board</h1>
+    <div id="main-content-wrapper" class="hidden">
+        <header>
+            <h1 id="main-title" class="text-4xl font-extrabold text-center">SNG's Hustle Board</h1>
+            <div id="user-controls">
+                <span id="user-info"></span>
+                <button id="logout-button">Logout</button>
+            </div>
+        </header>
         <p id="subtitle" class="text-center text-lg mb-6">Plan & Conquer.</p>
 
         <div id="time-date-display" class="text-base">Loading time...</div>
@@ -302,22 +444,27 @@
             </div>
         </div>
     </div>
+    
+    <div id="toast-notification"></div>
     <script>
         // --- Firebase Configuration ---
-        // Using the config provided by the user for sng-hustle-board-standalone
+        // Replace this with your actual Firebase config
         const firebaseConfig = {
-         apiKey: "AIzaSyBygcOaz8etf0XycZ4ILTrUkSXD-SKhFVM", 
-         authDomain: "sng-hustle-board-standalone.firebaseapp.com",
-         projectId: "sng-hustle-board-standalone",
-         storageBucket: "sng-hustle-board-standalone.appspot.com",
-         messagingSenderId: "892064086812",
-         appId: "1:892064086812:web:4f0aeec9a6bd24c92958d9"
+          apiKey: "AIzaSyBygcOaz8etf0XycZ4ILTrUkSXD-SKhFVM", 
+          authDomain: "sng-hustle-board-standalone.firebaseapp.com",
+          projectId: "sng-hustle-board-standalone",
+          storageBucket: "sng-hustle-board-standalone.appspot.com",
+          messagingSenderId: "892064086812",
+          appId: "1:892064086812:web:4f0aeec9a6bd24c92958d9"
         };
         // --- End Firebase Configuration ---
 
         // --- Initialize Firebase ---
         let db;
         let auth;
+        let currentUser = null;
+        let currentUserId = null;
+        
         try {
             // Initialize Firebase App if it hasn't been initialized yet
             if (!firebase.apps.length) {
@@ -328,13 +475,33 @@
             // Get Firestore instance
             db = firebase.firestore();
             auth = firebase.auth();
-            console.log("Firebase initialized successfully with sng-hustle-board-standalone config.");
+            console.log("Firebase initialized successfully.");
         } catch (error) {
             console.error("Firebase initialization failed:", error);
-            alert("Firebase initialization failed. The app will work in offline mode.");
+            showToast("Running in offline mode. Your data will be stored locally.");
             db = null;
             auth = null;
         }
+
+        // --- Auth Elements ---
+        const authOverlay = document.getElementById("auth-overlay");
+        const loginForm = document.getElementById("login-form");
+        const signupForm = document.getElementById("signup-form");
+        const showSignupLink = document.getElementById("show-signup");
+        const showLoginLink = document.getElementById("show-login");
+        const loginButton = document.getElementById("login-button");
+        const signupButton = document.getElementById("signup-button");
+        const rememberCheckbox = document.getElementById("remember-for-day");
+        const loginEmail = document.getElementById("login-email");
+        const authPassword = document.getElementById("auth-password");
+        const signupNickname = document.getElementById("signup-nickname");
+        const signupEmail = document.getElementById("signup-email");
+        const signupPassword = document.getElementById("signup-password");
+        const authErrorMessage = document.getElementById("auth-error-message");
+        const signupErrorMessage = document.getElementById("signup-error-message");
+        const logoutButton = document.getElementById("logout-button");
+        const userInfo = document.getElementById("user-info");
+        const mainContentWrapper = document.getElementById("main-content-wrapper");
 
         // --- Firestore Collection References ---
         // Assigned after authentication
@@ -345,7 +512,6 @@
         const legacyTasksCollection = db ? db.collection("hustle_tasks") : null;
         const legacyIdeaBoxCollection = db ? db.collection("hustle_ideaBoxTasks") : null;
         const legacyArchiveCollection = db ? db.collection("hustle_archive") : null;
-        let userUID = null;
 
         // --- Constants ---
         const BOSTON_TIMEZONE = 'America/New_York'; // Timezone for date/time operations
@@ -396,19 +562,7 @@
         const modalEndTimeInput = document.getElementById('modal-end-time');
         const modalSaveBtn = document.getElementById('modal-save-btn');
         const modalCancelBtn = document.getElementById('modal-cancel-btn');
-        const authOverlay = document.getElementById("auth-overlay");
-        const loginButton = document.getElementById("login-button");
-        const signupButton = document.getElementById("signup-button");
-        const showSignup = document.getElementById("show-signup");
-        const showLogin = document.getElementById("show-login");
-        const rememberCheckbox = document.getElementById("remember-for-day");
-        const usernameInput = document.getElementById("login-username");
-        const passwordInput = document.getElementById("auth-password");
-        const signupNickname = document.getElementById("signup-nickname");
-        const signupUsername = document.getElementById("signup-username");
-        const signupPassword = document.getElementById("signup-password");
-        const loginForm = document.getElementById("login-form");
-        const signupForm = document.getElementById("signup-form");
+        const toastElement = document.getElementById('toast-notification');
 
         // --- Helper Functions ---
         // Helper function to log Firebase status
@@ -416,82 +570,347 @@
             console.log("----- FIREBASE STATUS -----");
             console.log("Firebase db object exists:", !!db);
             console.log("Firebase auth object exists:", !!auth);
-            console.log("Current user:", auth?.currentUser ? auth.currentUser.uid : "None");
-            console.log("User UID variable:", userUID);
+            console.log("Current user:", auth?.currentUser ? auth.currentUser.email : "None");
+            console.log("User UID variable:", currentUserId);
             console.log("hustleTasksCollection exists:", !!hustleTasksCollection);
             console.log("hustleIdeaBoxCollection exists:", !!hustleIdeaBoxCollection);
             console.log("hustleArchiveCollection exists:", !!hustleArchiveCollection);
             console.log("--------------------------");
         }
 
-        function usernameToEmail(name) {
-            return `${name}@local.user`;
+        // --- Authentication Functions ---
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(String(email).toLowerCase());
         }
 
-        if (showSignup && showLogin && loginForm && signupForm) {
-            showSignup.addEventListener("click", (e) => { e.preventDefault(); loginForm.style.display = 'none'; signupForm.style.display = 'block'; });
-            showLogin.addEventListener("click", (e) => { e.preventDefault(); signupForm.style.display = 'none'; loginForm.style.display = 'block'; });
-        }
-
-        if (loginButton) {
-            loginButton.addEventListener("click", async () => {
-                console.log("Login button clicked");
-                const username = usernameInput.value.trim();
-                const password = passwordInput.value;
-                if (!username || !password) { alert("Please enter username and password."); return; }
+        async function loginWithEmailPassword(email, password, remember = false) {
+            if (!auth) {
+                // Handle offline mode login
+                const offlineUserId = `offline-${email}`;
+                setCurrentUser({
+                    uid: offlineUserId,
+                    email: email,
+                    displayName: email.split('@')[0]
+                });
+                showToast("Logged in offline mode. Your data will be stored locally.");
+                setupCollections(offlineUserId);
+                hideAuthOverlay();
                 
-                if (!auth) {
-                    // Handle offline mode
-                    userUID = "offline-" + username;
-                    authOverlay.classList.remove("active");
-                    initializeAfterAuth();
+                if (remember) {
+                    storeRememberForDay(offlineUserId, email, password);
+                }
+                return;
+            }
+            
+            try {
+                authErrorMessage.textContent = "";
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                console.log("Login successful");
+                
+                // Handle remember for the day
+                if (remember) {
+                    storeRememberForDay(userCredential.user.uid, email, password);
+                } else {
+                    clearRememberForDay();
+                }
+                
+                setCurrentUser(userCredential.user);
+                setupCollections(userCredential.user.uid);
+                hideAuthOverlay();
+                showToast(`Welcome back, ${userCredential.user.displayName || email.split('@')[0]}!`);
+                
+            } catch (error) {
+                console.error("Login error:", error);
+                authErrorMessage.textContent = error.message;
+                
+                // Handle common errors with more user-friendly messages
+                if (error.code === 'auth/user-not-found') {
+                    authErrorMessage.textContent = "No account found with this email.";
+                } else if (error.code === 'auth/wrong-password') {
+                    authErrorMessage.textContent = "Incorrect password.";
+                } else if (error.code === 'auth/invalid-email') {
+                    authErrorMessage.textContent = "Please enter a valid email address.";
+                } else if (error.code === 'auth/too-many-requests') {
+                    authErrorMessage.textContent = "Too many failed login attempts. Try again later.";
+                }
+            }
+        }
+
+        async function createAccount(nickname, email, password) {
+            if (!auth) {
+                // Handle offline account creation
+                const offlineUserId = `offline-${email}`;
+                setCurrentUser({
+                    uid: offlineUserId,
+                    email: email,
+                    displayName: nickname
+                });
+                showToast("Account created in offline mode. Your data will be stored locally.");
+                setupCollections(offlineUserId);
+                hideAuthOverlay();
+                return;
+            }
+            
+            try {
+                signupErrorMessage.textContent = "";
+                
+                if (nickname.trim() === '') {
+                    signupErrorMessage.textContent = "Please enter your name.";
                     return;
                 }
                 
-                try {
-                    const email = usernameToEmail(username);
-                    const cred = await auth.signInWithEmailAndPassword(email, password);
-                    console.log("Login successful, current user:", auth.currentUser?.uid);
-                    authOverlay.classList.remove("active");
-                    if (rememberCheckbox.checked) {
-                        storeRememberForDay(cred.user.uid, username, password);
-                    } else {
+                if (!validateEmail(email)) {
+                    signupErrorMessage.textContent = "Please enter a valid email address.";
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    signupErrorMessage.textContent = "Password must be at least 6 characters.";
+                    return;
+                }
+                
+                // Create user in Firebase
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Update profile with nickname
+                await userCredential.user.updateProfile({
+                    displayName: nickname
+                });
+                
+                // Store additional user info in Firestore
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    nickname: nickname,
+                    email: email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                console.log("Account created successfully");
+                
+                setCurrentUser(userCredential.user);
+                setupCollections(userCredential.user.uid);
+                hideAuthOverlay();
+                showToast(`Welcome, ${nickname}! Your account has been created.`);
+                
+            } catch (error) {
+                console.error("Signup error:", error);
+                signupErrorMessage.textContent = error.message;
+                
+                // Handle common errors with more user-friendly messages
+                if (error.code === 'auth/email-already-in-use') {
+                    signupErrorMessage.textContent = "This email is already registered. Try logging in instead.";
+                } else if (error.code === 'auth/invalid-email') {
+                    signupErrorMessage.textContent = "Please enter a valid email address.";
+                } else if (error.code === 'auth/weak-password') {
+                    signupErrorMessage.textContent = "Password is too weak. Use at least 6 characters.";
+                }
+            }
+        }
+
+        function setCurrentUser(user) {
+            currentUser = user;
+            currentUserId = user.uid;
+            
+            if (userInfo) {
+                userInfo.textContent = user.displayName || user.email.split('@')[0];
+            }
+        }
+
+        function logout() {
+            if (auth && auth.currentUser) {
+                auth.signOut()
+                    .then(() => {
+                        console.log("Logged out successfully");
+                    })
+                    .catch(error => {
+                        console.error("Logout error:", error);
+                    });
+            }
+            
+            // Clear user data regardless of auth status
+            currentUser = null;
+            currentUserId = null;
+            hustleTasksCollection = null;
+            hustleIdeaBoxCollection = null;
+            hustleArchiveCollection = null;
+            
+            // Clear local remember data
+            clearRememberForDay();
+            
+            // Reset UI
+            showAuthOverlay();
+            clearBoard();
+            
+            showToast("Logged out successfully.");
+        }
+
+        function showAuthOverlay() {
+            if (authOverlay) {
+                mainContentWrapper.classList.add('hidden');
+                authOverlay.classList.add('active');
+                authErrorMessage.textContent = "";
+                signupErrorMessage.textContent = "";
+                
+                // Clear password fields
+                authPassword.value = "";
+                signupPassword.value = "";
+            }
+        }
+
+        function hideAuthOverlay() {
+            if (authOverlay) {
+                authOverlay.classList.remove('active');
+                mainContentWrapper.classList.remove('hidden');
+            }
+        }
+
+        function setupCollections(userId) {
+            if (db) {
+                console.log("Setting up collections for user:", userId);
+                hustleTasksCollection = db.collection(`users/${userId}/hustle_tasks`);
+                hustleIdeaBoxCollection = db.collection(`users/${userId}/hustle_ideaBoxTasks`);
+                hustleArchiveCollection = db.collection(`users/${userId}/hustle_archive`);
+            } else {
+                console.warn("Database not initialized, using local storage only");
+            }
+            
+            // Initialize the app with the current date
+            initializeApp();
+        }
+
+        // Store login info for a day
+        function storeRememberForDay(uid, email, password) {
+            try {
+                const expiryDate = new Date();
+                expiryDate.setHours(23, 59, 59, 999); // Set to end of day
+                
+                const loginData = {
+                    uid: uid,
+                    email: email,
+                    password: password,
+                    expiry: expiryDate.getTime()
+                };
+                
+                localStorage.setItem('hustleBoard_remember', JSON.stringify(loginData));
+                console.log("Login info stored for the day");
+                
+                // Set timeout to clear data at expiry
+                const timeUntilExpiry = expiryDate.getTime() - Date.now();
+                if (timeUntilExpiry > 0) {
+                    setTimeout(() => {
                         clearRememberForDay();
-                    }
-                    logFirebaseStatus();
-                } catch (err) {
-                    console.error("Login failed:", err);
-                    alert("Login failed: " + err.message);
+                    }, timeUntilExpiry);
+                }
+                
+            } catch (error) {
+                console.error("Error storing login info:", error);
+                // Continue without storing (non-critical error)
+            }
+        }
+
+        function clearRememberForDay() {
+            localStorage.removeItem('hustleBoard_remember');
+            console.log("Login info cleared");
+        }
+
+        function checkRememberedLogin() {
+            try {
+                const rememberedLogin = localStorage.getItem('hustleBoard_remember');
+                
+                if (!rememberedLogin) {
+                    return false;
+                }
+                
+                const loginData = JSON.parse(rememberedLogin);
+                
+                // Check if login data is expired
+                if (loginData.expiry < Date.now()) {
+                    clearRememberForDay(); // Clear expired data
+                    return false;
+                }
+                
+                console.log("Found remembered login, attempting auto-login");
+                
+                // Auto-login with stored credentials
+                loginWithEmailPassword(loginData.email, loginData.password, true);
+                return true;
+                
+            } catch (error) {
+                console.error("Error checking remembered login:", error);
+                clearRememberForDay(); // Clear potentially corrupted data
+                return false;
+            }
+        }
+
+        // --- Setup Auth Listeners ---
+        if (showSignupLink) {
+            showSignupLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+            });
+        }
+
+        if (showLoginLink) {
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+        }
+
+        if (loginButton) {
+            loginButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                const email = loginEmail.value.trim();
+                const password = authPassword.value;
+                const remember = rememberCheckbox.checked;
+                
+                if (email && password) {
+                    loginWithEmailPassword(email, password, remember);
+                } else {
+                    authErrorMessage.textContent = "Please enter your email and password.";
                 }
             });
         }
 
         if (signupButton) {
-            signupButton.addEventListener("click", async () => {
-                const nick = signupNickname.value.trim();
-                let user = signupUsername.value.trim();
-                const pass = signupPassword.value;
-                if (!nick || !pass) { alert("Please enter nickname and password."); return; }
-                if (!user) { user = nick; }
+            signupButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                const nickname = signupNickname.value.trim();
+                const email = signupEmail.value.trim();
+                const password = signupPassword.value;
                 
-                if (!auth) {
-                    // Handle offline mode
-                    userUID = "offline-" + user;
-                    authOverlay.classList.remove("active");
-                    initializeAfterAuth();
-                    return;
+                if (nickname && email && password) {
+                    createAccount(nickname, email, password);
+                } else {
+                    signupErrorMessage.textContent = "Please fill in all fields.";
                 }
-                
-                try {
-                    const email = usernameToEmail(user);
-                    const cred = await auth.createUserWithEmailAndPassword(email, pass);
-                    await cred.user.updateProfile({ displayName: nick });
-                    if (db) {
-                        await db.collection('users').doc(cred.user.uid).set({ nickname: nick, username: user });
+            });
+        }
+
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                logout();
+            });
+        }
+
+        // Listen for auth state changes
+        if (auth) {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    console.log("Auth state changed: User is signed in", user.uid);
+                    setCurrentUser(user);
+                    setupCollections(user.uid);
+                    hideAuthOverlay();
+                } else {
+                    console.log("Auth state changed: User is signed out");
+                    // Check for remembered login before showing auth overlay
+                    if (!checkRememberedLogin()) {
+                        currentUser = null;
+                        currentUserId = null;
+                        showAuthOverlay();
                     }
-                    authOverlay.classList.remove("active");
-                } catch (err) {
-                    alert("Account creation failed: " + err.message);
                 }
             });
         }
@@ -513,6 +932,24 @@
         let progressTimerIntervalId = null; // Stores the interval ID for updating progress bars
         let lastMinuteIntervalId = null; // Stores the interval ID for faster updates in the last minute
         let ideaTaskToSchedule = null;  // Stores idea task data when prompting for time
+        let transactionsData = [];
+
+        // --- Toast Notification ---
+        let toastTimeout;
+        function showToast(message, duration = 3000) {
+            if (!toastElement) return;
+            
+            toastElement.textContent = message;
+            toastElement.classList.add('show');
+            
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+            }
+            
+            toastTimeout = setTimeout(() => {
+                toastElement.classList.remove('show');
+            }, duration);
+        }
 
         // --- Utility Functions ---
 
@@ -595,8 +1032,8 @@
         // Save tasks for a date to localStorage
         function saveTasksToLocalStorage(dateString, tasksForDate) {
             try {
-                localStorage.setItem(`tasks-${dateString}`, JSON.stringify(tasksForDate));
-                console.log(`Saved tasks to localStorage for date: ${dateString}`);
+                localStorage.setItem(`${currentUserId}_tasks-${dateString}`, JSON.stringify(tasksForDate));
+                console.log(`Saved tasks to localStorage for user ${currentUserId}, date: ${dateString}`);
             } catch (e) {
                 console.error('Failed to save tasks to localStorage:', e);
             }
@@ -605,10 +1042,10 @@
         // Load tasks for a date from localStorage
         function loadTasksFromLocalStorage(dateString) {
             try {
-                const data = localStorage.getItem(`tasks-${dateString}`);
+                const data = localStorage.getItem(`${currentUserId}_tasks-${dateString}`);
                 if (data) {
                     const parsed = JSON.parse(data);
-                    console.log(`Loaded tasks from localStorage for date: ${dateString}`);
+                    console.log(`Loaded tasks from localStorage for user ${currentUserId}, date: ${dateString}`);
                     return {
                         todo: Array.isArray(parsed.todo) ? parsed.todo : [],
                         inprogress: Array.isArray(parsed.inprogress) ? parsed.inprogress : [],
@@ -684,7 +1121,7 @@
                 console.error(`Error loading daily tasks document for ${dateString}:`, error);
                 
                 // Show a user-friendly alert
-                alert(`Failed to load tasks for ${formatDisplayDate(dateString)}. Using local data if available.`);
+                showToast(`Failed to load tasks for ${formatDisplayDate(dateString)}. Using local data if available.`);
 
                 // Fallback to any tasks stored locally
                 return loadTasksFromLocalStorage(dateString);
@@ -705,7 +1142,7 @@
             // Validate the date string format
             if (!dateString || typeof dateString !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
                 console.error(`Invalid dateString provided to saveTasksToFirestore: ${dateString}. Aborting save.`);
-                alert(`Internal Error: Invalid date format used (${dateString}). Cannot save tasks.`);
+                showToast(`Error saving tasks: Invalid date format. Your changes are saved locally.`);
                 return;
             }
             
@@ -721,16 +1158,16 @@
                 if (legacyDocRef) {
                     try { await legacyDocRef.delete(); } catch(e) { /* ignore */ }
                 }
-                console.log("Daily tasks successfully saved for date:", dateString);
+                console.log("Daily tasks successfully saved to Firestore:", dateString);
             } catch (error) {
                 // Log detailed error information if saving fails
                 console.error(`Error saving daily tasks for ${dateString}:`, error);
                 
                 // Check for specific permission errors
                 if (error.code === 'permission-denied') {
-                    alert(`Permission denied! You don't have permission to save tasks. Try logging in again.`);
+                    showToast(`Permission denied! You don't have permission to save tasks. Try logging in again.`);
                 } else {
-                    alert(`Error saving daily tasks. Your changes are saved locally.`);
+                    showToast(`Error saving to cloud. Your changes are saved locally.`);
                 }
             }
         }
@@ -740,14 +1177,14 @@
          * @returns {Promise<Array>} A promise that resolves to an array of idea task objects.
          */
         async function loadIdeaTasksFromFirestore() {
-            const storedIdeas = localStorage.getItem('hustle_ideaBoxTasks');
+            const storedIdeas = localStorage.getItem(`${currentUserId}_hustle_ideaBoxTasks`);
             let ideaTasks = [];
             
             // Try to load from localStorage first
             if (storedIdeas) {
                 try {
                     ideaTasks = JSON.parse(storedIdeas);
-                    console.log(`Loaded ${ideaTasks.length} idea tasks from localStorage.`);
+                    console.log(`Loaded ${ideaTasks.length} idea tasks from localStorage for user ${currentUserId}`);
                 } catch (error) {
                     console.error("Error parsing idea tasks from localStorage:", error);
                 }
@@ -775,7 +1212,7 @@
                     console.log(`Migrated ${legacySnap.size} legacy idea tasks.`);
                     
                     // Save to localStorage as backup
-                    localStorage.setItem('hustle_ideaBoxTasks', JSON.stringify(ideaTasks));
+                    localStorage.setItem(`${currentUserId}_hustle_ideaBoxTasks`, JSON.stringify(ideaTasks));
                     return ideaTasks;
                 }
                 
@@ -787,10 +1224,10 @@
                     });
                     
                     // Save to localStorage as backup
-                    localStorage.setItem('hustle_ideaBoxTasks', JSON.stringify(ideaTasks));
+                    localStorage.setItem(`${currentUserId}_hustle_ideaBoxTasks`, JSON.stringify(ideaTasks));
                 }
                 
-                console.log(`Loaded ${ideaTasks.length} idea tasks.`);
+                console.log(`Loaded ${ideaTasks.length} idea tasks from Firestore.`);
                 return ideaTasks;
             } catch (error) {
                 console.error("Error getting idea tasks from Firestore:", error);
@@ -818,14 +1255,14 @@
             // Always save to localStorage first
             let ideaTasks = [];
             try {
-                const storedIdeas = localStorage.getItem('hustle_ideaBoxTasks');
+                const storedIdeas = localStorage.getItem(`${currentUserId}_hustle_ideaBoxTasks`);
                 ideaTasks = storedIdeas ? JSON.parse(storedIdeas) : [];
             } catch (error) {
                 console.error("Error parsing existing idea tasks:", error);
             }
             
             ideaTasks.unshift(newTask); // Add to beginning of array
-            localStorage.setItem('hustle_ideaBoxTasks', JSON.stringify(ideaTasks));
+            localStorage.setItem(`${currentUserId}_hustle_ideaBoxTasks`, JSON.stringify(ideaTasks));
             console.log(`Added idea task to localStorage: ${newId}`);
             
             // If Firestore is not available, return the local ID
@@ -848,7 +1285,7 @@
                 // If successful, update the local storage with the new Firestore ID
                 const firestoreId = docRef.id;
                 ideaTasks[0].id = firestoreId; // Update the ID in the first item (most recent)
-                localStorage.setItem('hustle_ideaBoxTasks', JSON.stringify(ideaTasks));
+                localStorage.setItem(`${currentUserId}_hustle_ideaBoxTasks`, JSON.stringify(ideaTasks));
                 
                 console.log(`Firestore add successful. Document ID: ${firestoreId}`);
                 return firestoreId;
@@ -868,11 +1305,11 @@
             
             // Remove from localStorage first
             try {
-                const storedIdeas = localStorage.getItem('hustle_ideaBoxTasks');
+                const storedIdeas = localStorage.getItem(`${currentUserId}_hustle_ideaBoxTasks`);
                 if (storedIdeas) {
                     let ideaTasks = JSON.parse(storedIdeas);
                     ideaTasks = ideaTasks.filter(task => task.id !== taskId);
-                    localStorage.setItem('hustle_ideaBoxTasks', JSON.stringify(ideaTasks));
+                    localStorage.setItem(`${currentUserId}_hustle_ideaBoxTasks`, JSON.stringify(ideaTasks));
                     console.log(`Removed idea task from localStorage: ${taskId}`);
                 }
             } catch (error) {
@@ -893,9 +1330,9 @@
                 console.log(`Deleted idea task from Firestore: ${taskId}`);
             } catch (error) {
                 console.error("Error deleting idea task from Firestore:", error);
+                showToast("Could not delete idea from cloud, but it's removed locally.");
             }
         }
-
 
         // --- Core Application Functions ---
 
@@ -1050,12 +1487,12 @@
                 event.stopPropagation();
                 // Retrieve the ID directly from the element's dataset when clicked
                 const taskIdToDelete = task.dataset.id;
-                console.log(`Delete button clicked for idea ID: ${taskIdToDelete}, Text: "${task.dataset.text}"`);
+                console.log(`DEBUG: Delete button clicked for idea ID: ${taskIdToDelete}, Text: "${task.dataset.text}"`);
 
                 if (confirm(`Are you sure you want to delete idea: "${task.dataset.text}"?`)) {
                     deleteBtn.disabled = true; // Disable button during deletion
                     try {
-                        await deleteIdeaTaskFromFirestore(taskIdToDelete); // Call delete function
+                        await deleteIdeaTaskFromFirestore(taskIdToDelete); // Call delete
                         task.remove(); // Remove element from UI on success
                     } catch (error) {
                         deleteBtn.disabled = false; // Re-enable button on error
@@ -1108,7 +1545,7 @@
             }
             const taskText = ideaTaskInput.value.trim(); // Get and trim input value
             if (taskText === '') { // Validate input
-                alert('Please enter an idea description.');
+                showToast('Please enter an idea description.');
                 ideaTaskInput.focus();
                 return;
             }
@@ -1136,7 +1573,7 @@
             } catch (error) {
                 // Error handling
                 console.error("Error in addIdeaTask:", error);
-                alert("Failed to add idea. Please try again.");
+                showToast("Failed to add idea. Please try again.");
             } finally {
                 // Always re-enable the button and reset its text
                 console.log("Executing finally block in addIdeaTask");
@@ -1231,7 +1668,7 @@
 
             // --- Input Validation ---
             if (newText === '') {
-                alert('Task description cannot be empty.');
+                showToast('Task description cannot be empty.');
                 textInput.focus();
                 return;
             }
@@ -1239,17 +1676,17 @@
             // Time validation for edit:
             if (newStartTime || newEndTime) { // If either time field has a value
                 if (!newStartTime) {
-                    alert('Please enter a start time if providing an end time, or leave both empty.');
+                    showToast('Please enter a start time if providing an end time, or leave both empty.');
                     startTimeInput.focus();
                     return;
                 }
                 if (!newEndTime) {
-                    alert('Please enter an end time if providing a start time, or leave both empty.');
+                    showToast('Please enter an end time if providing a start time, or leave both empty.');
                     endTimeInput.focus();
                     return;
                 }
                 if (newStartTime >= newEndTime) {
-                    alert('End time must be after start time.');
+                    showToast('End time must be after start time.');
                     endTimeInput.focus();
                     return;
                 }
@@ -1343,6 +1780,7 @@
                     const columnElement = document.getElementById(columnId);
                     const tasksContainer = columnElement?.querySelector('.tasks-container');
                     if (tasksContainer) {
+                        // tasksContainer.innerHTML = ''; // Optional: Ensure container is empty
                         tasksForDay[columnId].forEach(taskData => {
                             const taskElement = createTaskElement(taskData, columnId);
                             tasksContainer.appendChild(taskElement);
@@ -1356,6 +1794,7 @@
                 updateInProgressTimers(); // Initialize/update progress timers
 
             } catch (error) {
+                // Error is logged in detail within loadTasksFromFirestore
                 console.error("Error in displayTasksForDate:", error);
                 selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate} (Offline)`;
                 
@@ -1449,7 +1888,7 @@
             // Ensure all elements are found
             if (!taskInput || !startTimeInput || !endTimeInput || !todoTasksContainer) {
                 console.error("Error: Daily task form/column elements not found.");
-                alert("Error: Could not find necessary form elements.");
+                showToast("Error: Could not find necessary form elements.");
                 return;
             }
 
@@ -1459,30 +1898,30 @@
             let endTime = endTimeInput.value;     // Use let to potentially set to null
 
             if (taskText === '') {
-                alert('Please enter a task description.');
+                showToast('Please enter a task description.');
                 taskInput.focus();
                 return;
             }
 
             if (!currentSelectedDate) {
-                alert('Cannot add task: No date selected. Please select a date or refresh.');
+                showToast('Cannot add task: No date selected. Please select a date or refresh.');
                 return;
             }
 
             // Time validation logic
             if (startTime || endTime) { // If either time field has a value
                 if (!startTime) {
-                    alert('Please enter a start time if providing an end time.');
+                    showToast('Please enter a start time if providing an end time.');
                     startTimeInput.focus();
                     return;
                 }
                 if (!endTime) {
-                    alert('Please enter an end time if providing a start time.');
+                    showToast('Please enter an end time if providing a start time.');
                     endTimeInput.focus();
                     return;
                 }
                 if (startTime >= endTime) {
-                    alert('End time must be after start time.');
+                    showToast('End time must be after start time.');
                     endTimeInput.focus();
                     return;
                 }
@@ -1503,7 +1942,7 @@
                 todoTasksContainer.appendChild(newTaskElement);
             } else {
                 console.error("Error creating daily task element.");
-                alert("Error: Could not create the task visually.");
+                showToast("Error: Could not create the task visually.");
                 return;
             }
 
@@ -1730,10 +2169,10 @@
             // Get and validate times
             const startTime = modalStartTimeInput.value;
             const endTime = modalEndTimeInput.value;
-            if (!startTime) { alert('Please enter a start time.'); modalStartTimeInput.focus(); return; }
-            if (!endTime) { alert('Please enter an end time.'); modalEndTimeInput.focus(); return; }
-            if (startTime >= endTime) { alert('End time must be after start time.'); modalEndTimeInput.focus(); return; }
-            if (!currentSelectedDate) { alert('Cannot schedule task: No date selected.'); hideTimePrompt(); return; }
+            if (!startTime) { showToast('Please enter a start time.'); modalStartTimeInput.focus(); return; }
+            if (!endTime) { showToast('Please enter an end time.'); modalEndTimeInput.focus(); return; }
+            if (startTime >= endTime) { showToast('End time must be after start time.'); modalEndTimeInput.focus(); return; }
+            if (!currentSelectedDate) { showToast('Cannot schedule task: No date selected.'); hideTimePrompt(); return; }
 
             // Create data for the new Kanban task
             const newTaskData = {
@@ -1756,26 +2195,26 @@
 
                 // --- Delete the original idea task from storage and UI ---
                 try {
-                    console.log(`Deleting original idea task (ID: ${ideaTaskToSchedule.id}) after scheduling.`);
+                    console.log(`DEBUG: Deleting original idea task (ID: ${ideaTaskToSchedule.id}) after scheduling.`);
                     await deleteIdeaTaskFromFirestore(ideaTaskToSchedule.id);
                     const originalIdeaElement = document.getElementById(`idea-${ideaTaskToSchedule.id}`);
                     if (originalIdeaElement) {
                         originalIdeaElement.remove();
-                        console.log(`Removed original idea task element from UI.`);
+                        console.log(`DEBUG: Removed original idea task element from UI.`);
                     } else {
-                        console.warn(`Could not find original idea task element (ID: idea-${ideaTaskToSchedule.id}) to remove from UI.`);
+                        console.warn(`DEBUG: Could not find original idea task element (ID: idea-${ideaTaskToSchedule.id}) to remove from UI.`);
                     }
                 } catch (error) {
                     console.error(`Error deleting original idea task (ID: ${ideaTaskToSchedule.id}) after scheduling:`, error);
                     // Inform user, but the main scheduling likely succeeded
-                    alert(`Task scheduled, but failed to remove the original from the Idea Box. Please remove it manually.`);
+                    showToast(`Task scheduled, but failed to remove the original from the Idea Box. Please remove it manually.`);
                 }
                 // --- End Deletion ---
 
                 hideTimePrompt(); // Close the modal
             } else {
                 console.error("Error creating or appending scheduled task element.");
-                alert("Error adding scheduled task to the board.");
+                showToast("Error adding scheduled task to the board.");
                 hideTimePrompt();
             }
         }
@@ -2117,30 +2556,6 @@
                  }
             });
 
-        // --- Authentication Helpers ---
-        function storeRememberForDay(uid, username, password) {
-            const expires = new Date();
-            expires.setHours(23,59,59,999);
-            const data = { uid: uid, username: username, password: password, expiresAt: expires.getTime() };
-            localStorage.setItem("rememberForDay", JSON.stringify(data));
-            scheduleSignOut(data.expiresAt);
-        }
-        function clearRememberForDay() {
-            localStorage.removeItem("rememberForDay");
-        }
-        function scheduleSignOut(expiration) {
-            const delay = expiration - Date.now();
-            if (delay > 0) {
-                setTimeout(() => {
-                    if (auth) auth.signOut().catch(err => console.error("Auto sign-out failed", err));
-                    clearRememberForDay();
-                }, delay);
-            } else {
-                if (auth) auth.signOut().catch(err => console.error("Auto sign-out failed", err));
-                clearRememberForDay();
-            }
-        }
-
             // Adjust update interval based on whether any task is in its last minute
             if (isInLastMinute && !lastMinuteIntervalId) {
                 // Switch to faster (1-second) updates
@@ -2160,13 +2575,14 @@
             }
         }
 
-        // --- Initialization ---
-        async function initializeAfterAuth() {
+        // --- Initialize the app ---
+        function initializeApp() {
             const currentBostonDate = getCurrentDateString(BOSTON_TIMEZONE);
+            
             if (dateSelector) {
                 dateSelector.value = currentBostonDate;
                 try {
-                    await displayTasksForDate(currentBostonDate);
+                    displayTasksForDate(currentBostonDate);
                 } catch (error) {
                     console.error("Failed initial daily task load:", error);
                 }
@@ -2177,12 +2593,12 @@
                 });
             } else {
                 console.error("Date selector element not found.");
-                try { await displayTasksForDate(currentBostonDate); } catch (error) { }
+                try { displayTasksForDate(currentBostonDate); } catch (error) { /* Ignore */ }
             }
 
             try {
-                await displayIdeaTasks();
-                await displayLatestSummary();
+                displayIdeaTasks();
+                displayLatestSummary();
             } catch(error) {
                 console.error("Failed to display ideas or summary:", error);
             }
@@ -2223,98 +2639,31 @@
             console.log("Initialization complete.");
         }
 
-        // Setup auth state listener
-        if (auth) {
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    userUID = user.uid;
-                    console.log('Authenticated as', userUID);
-                    
-                    // Initialize Firestore collections with user-specific paths
-                    hustleTasksCollection = db.collection(`users/${userUID}/hustle_tasks`);
-                    hustleIdeaBoxCollection = db.collection(`users/${userUID}/hustle_ideaBoxTasks`);
-                    hustleArchiveCollection = db.collection(`users/${userUID}/hustle_archive`);
-                    
-                    // Remove auth overlay if it's active
-                    authOverlay.classList.remove("active");
-                    
-                    // Now initialize the app
-                    await initializeAfterAuth();
-                } else {
-                    // Clear any existing collection references
-                    hustleTasksCollection = null;
-                    hustleIdeaBoxCollection = null;
-                    hustleArchiveCollection = null;
-                    
-                    // Show auth overlay
-                    authOverlay.classList.add("active");
-                    
-                    // Check if we should auto-login from localStorage
-                    const remembered = localStorage.getItem("rememberForDay");
-                    if (remembered) {
-                        try {
-                            const entry = JSON.parse(remembered);
-                            if (entry.expiresAt && entry.expiresAt > Date.now()) {
-                                // Auto-login with saved credentials
-                                const email = usernameToEmail(entry.username);
-                                try {
-                                    await auth.signInWithEmailAndPassword(email, entry.password);
-                                    console.log("Auto-login successful");
-                                    // Auth change will trigger onAuthStateChanged again
-                                } catch (err) {
-                                    console.error("Auto-login failed:", err);
-                                    clearRememberForDay();
-                                }
-                            } else {
-                                // Expired credentials
-                                clearRememberForDay();
-                            }
-                        } catch (e) {
-                            console.error("Failed to parse rememberForDay:", e);
-                            clearRememberForDay();
-                        }
-                    }
-                }
-            });
-        } else {
-            // If Firebase auth is not available, run in offline mode
-            console.log("Firebase auth not available. Running in offline mode.");
-            authOverlay.classList.add("active");
-            // Add a special bypass for offline mode
-            usernameInput.value = "Guest";
-            passwordInput.value = "offline";
-        }
-
-        // DOMContentLoaded event handler
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("DOM fully loaded and parsed.");
-
-            // Initialize UI elements that don't require Firebase
-            updateTimeDisplay();
-            setInterval(updateTimeDisplay, 60000);
-            displayMotivationalQuote();
-
-            // Check if Firebase is initialized
-            if (!db || !auth) {
-                console.log("Firebase not initialized. Running in offline mode.");
-                if(selectedDateDisplay) selectedDateDisplay.textContent = "⚠️ Offline Mode - Firebase not connected";
-                // Show login overlay anyway to login as guest
-                authOverlay.classList.add("active");
-            }
-        });
-
-        // Register service worker for PWA functionality
+        // --- Service Worker Registration ---
         if ('serviceWorker' in navigator) {
-            // Determine the correct service worker path relative to the current page
-            const swPath = new URL('service-worker.js', window.location.href).pathname;
             window.addEventListener('load', () => {
+                const swPath = new URL('service-worker.js', window.location.href).pathname;
                 navigator.serviceWorker.register(swPath)
-                    .then(reg => console.log('Service Worker registered:', reg.scope))
-                    .catch(err => console.error('Service Worker registration failed:', err));
+                    .then(reg => {
+                        console.log('Service Worker registration successful. Scope:', reg.scope);
+                    })
+                    .catch(err => {
+                        console.error('Service Worker registration failed:', err);
+                    });
             });
         } else {
-            console.warn('Service Worker not supported by this browser.');
+            console.warn('Service Workers not supported in this browser.');
         }
+
+        // Initialize the time display
+        updateTimeDisplay();
+        setInterval(updateTimeDisplay, 60000); // Update every minute
+        displayMotivationalQuote();
+
+        // Check for remembered login on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkRememberedLogin();
+        });
     </script>
 </body>
 </html>
