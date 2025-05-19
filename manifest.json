@@ -2,9 +2,10 @@
   "name": "SNG's Funky 3D Hustle Board",
   "short_name": "SNG Board",
   "description": "A Kanban-style board to plan and conquer your daily hustle.",
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#111827",
+  "background_color": "#374151",
   "theme_color": "#f97316",
   "orientation": "any",
   "icons": [
@@ -20,5 +21,37 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "type": "image/png",
+      "sizes": "1280x720",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshot2.png",
+      "type": "image/png",
+      "sizes": "750x1334",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Task",
+      "short_name": "Add",
+      "description": "Add a new task",
+      "url": "/?action=add",
+      "icons": [
+        {
+          "src": "icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "categories": ["productivity", "lifestyle"],
+  "version": "2.0.0"
 }
