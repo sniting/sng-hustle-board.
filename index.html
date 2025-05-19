@@ -2165,7 +2165,8 @@
                 } catch (error) {
                     console.error("Failed initial daily task load (caught in initialization):", error);
                 }
-                dateSelector.addEventListener('change', (event) => {
+                dateSelector.addEventListener('change', async (event) => {
+                    await saveCurrentBoardState();
                     displayTasksForDate(event.target.value);
                 });
             } else {
@@ -2222,7 +2223,8 @@
                 const offlineDate = getCurrentDateString(BOSTON_TIMEZONE);
                 if (dateSelector) {
                     dateSelector.value = offlineDate;
-                    dateSelector.addEventListener('change', (event) => {
+                    dateSelector.addEventListener('change', async (event) => {
+                        await saveCurrentBoardState();
                         displayTasksForDate(event.target.value);
                     });
                 }
