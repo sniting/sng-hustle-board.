@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <script>
+        // Redirect to index.html with the proper base path
+        (function() {
+            var l = window.location;
+            var basePath = '';
+            
+            // Handle GitHub Pages paths
+            if (l.hostname.includes('github.io')) {
+                var pathSegments = l.pathname.split('/');
+                if (pathSegments.length > 1 && pathSegments[1] !== '') {
+                    basePath = '/' + pathSegments[1];
+                }
+            }
+            
+            window.location.replace(basePath + '/index.html');
+        })();
+    </script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #374151;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .loading {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #f97316;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="loading"></div>
+        <p>Redirecting to SNG's Hustle Board...</p>
+    </div>
+</body>
+</html>
