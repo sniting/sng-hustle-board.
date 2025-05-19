@@ -14,6 +14,7 @@ const ASSETS_TO_CACHE = [
   // External resources don't need path adjustment
   'https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js',
+  'https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js',
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@700;800&display=swap'
