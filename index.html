@@ -1385,8 +1385,11 @@
          * Handles adding a new daily task from the form to the 'To Do' column.
          */
         async function addTask() {
-            // Check Firestore initialization
-            if (!db || !hustleTasksCollection) { alert("Database not connected. Cannot add task."); return; }
+            // Allow adding tasks even if Firestore isn't available by saving locally
+            const firestoreAvailable = db && hustleTasksCollection;
+            if (!firestoreAvailable) {
+                console.warn("Database not connected. Task will be stored locally.");
+            }
 
             // Get references to form elements
             const taskInput = document.getElementById('new-task-input');
@@ -1920,7 +1923,6 @@
 
         // Checks tasks in 'To Do' column and moves them to 'In Progress' if their start time has passed
         async function checkAndMoveTasks() {
-            if (!db) return; // Ensure DB is initialized
             const todayDateStr = getCurrentDateString(BOSTON_TIMEZONE);
             // Only run this check if the currently viewed date is today
             if (currentSelectedDate !== todayDateStr) {
