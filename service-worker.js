@@ -1,8 +1,8 @@
 // service-worker.js
 
-// Adjust paths for GitHub Pages if needed
-const isGitHubPages = self.location.hostname.includes('github.io');
-const basePath = isGitHubPages ? '/sng-hustle-board/' : '/';
+// Determine the base path dynamically from the service worker location
+// This supports repositories with unusual names (e.g. with trailing dots)
+const basePath = self.location.pathname.replace(/service-worker\.js$/, '');
 
 const CACHE_NAME = 'sng-hustle-board-v1';
 const ASSETS_TO_CACHE = [
@@ -180,8 +180,8 @@ self.addEventListener('push', (event) => {
 
     const options = {
       body: data.body || 'Task update',
-      icon: isGitHubPages ? '/sng-hustle-board/icon-192.png' : '/icon-192.png', // Updated icon path
-      badge: isGitHubPages ? '/sng-hustle-board/icon-192.png' : '/icon-192.png', // Updated badge path
+      icon: basePath + 'icon-192.png',
+      badge: basePath + 'icon-192.png',
       tag: `task-${data.taskId}`, // Use tag to replace existing notification
       data: {
         taskId: data.taskId,
@@ -224,8 +224,8 @@ self.addEventListener('message', (event) => {
     // Options for showing/updating the notification
     const options = {
       body: `${taskData.text}\n${taskData.progressInfo || ''}`,
-      icon: isGitHubPages ? '/sng-hustle-board/icon-192.png' : '/icon-192.png', // Updated icon path
-      badge: isGitHubPages ? '/sng-hustle-board/icon-192.png' : '/icon-192.png', // Updated badge path
+      icon: basePath + 'icon-192.png',
+      badge: basePath + 'icon-192.png',
       tag: `task-${taskData.id}`, // Use tag to replace existing notification
       renotify: true, // Important to alert user of update (on supported platforms)
       data: { // Include data for notificationclick handler

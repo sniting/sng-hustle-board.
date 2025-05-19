@@ -2262,8 +2262,8 @@
     <script>
         // Register service worker for PWA functionality
         if ('serviceWorker' in navigator) {
-            const isGitHubPages = window.location.hostname.includes('github.io');
-            const swPath = isGitHubPages ? '/sng-hustle-board/service-worker.js' : '/service-worker.js';
+            // Determine the correct service worker path relative to the current page
+            const swPath = new URL('service-worker.js', window.location.href).pathname;
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register(swPath)
                     .then(reg => console.log('Service Worker registered:', reg.scope))
