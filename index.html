@@ -956,6 +956,7 @@
         let lastMinuteIntervalId = null; // Stores the interval ID for faster updates in the last minute
         let ideaTaskToSchedule = null;  // Stores idea task data when prompting for time
         let transactionsData = [];
+        let listenersInitialized = false; // Ensure event listeners are registered only once
 
         // --- Toast Notification ---
         let toastTimeout;
@@ -2634,10 +2635,28 @@
             }
         }
 
+        // Handles date changes, saving current tasks and loading the new date
+        async function handleDateChange(event) {
+            const oldDate = currentSelectedDate;
+            const newDate = event.target.value;
+
+            if (oldDate === newDate) return; // No change
+
+            try {
+                await saveCurrentBoardState();
+                console.log(`Successfully saved board state for ${oldDate} before switching dates`);
+            } catch (error) {
+                console.error(`Error saving board state for ${oldDate} before switching dates:`, error);
+            }
+
+            clearBoard();
+            displayTasksForDate(newDate);
+        }
+
         // --- Initialize the app ---
         function initializeApp() {
             const currentBostonDate = getCurrentDateString(BOSTON_TIMEZONE);
-            
+
             if (dateSelector) {
                 dateSelector.value = currentBostonDate;
                 try {
@@ -2645,27 +2664,10 @@
                 } catch (error) {
                     console.error("Failed initial daily task load:", error);
                 }
-                
-                dateSelector.addEventListener('change', async (event) => {
-                    const oldDate = currentSelectedDate;
-                    const newDate = event.target.value;
-                    
-                    if (oldDate === newDate) return; // Avoid useless saving if date didn't change
-                    
-                    // First save current board state
-                    try {
-                        await saveCurrentBoardState();
-                        console.log(`Successfully saved board state for ${oldDate} before switching dates`);
-                    } catch (error) {
-                        console.error(`Error saving board state for ${oldDate} before switching dates:`, error);
-                    }
-                    
-                    // Then clear the board before displaying the new date
-                    clearBoard();
-                    
-                    // Now load the new date's tasks
-                    displayTasksForDate(newDate);
-                });
+
+                if (!listenersInitialized) {
+                    dateSelector.addEventListener('change', handleDateChange);
+                }
             } else {
                 console.error("Date selector element not found.");
                 try { displayTasksForDate(currentBostonDate); } catch (error) { /* Ignore */ }
@@ -2678,28 +2680,30 @@
                 console.error("Failed to display ideas or summary:", error);
             }
 
-            // Set up event listeners for adding tasks
-            const addTaskBtnLocal = document.getElementById('add-task-btn');
-            if (addTaskBtnLocal) {
-                addTaskBtnLocal.addEventListener('click', addTask);
-                const dailyTaskInputs = ['new-task-input','new-task-start-time','new-task-end-time'];
-                dailyTaskInputs.forEach(id => {
-                    const input = document.getElementById(id);
-                    if (input) input.addEventListener('keypress', (event) => { if (event.key === 'Enter') addTask(); });
-                });
-            } else { 
-                console.error("Add daily task button not found."); 
-            }
+            // Set up event listeners only once
+            if (!listenersInitialized) {
+                const addTaskBtnLocal = document.getElementById('add-task-btn');
+                if (addTaskBtnLocal) {
+                    addTaskBtnLocal.addEventListener('click', addTask);
+                    const dailyTaskInputs = ['new-task-input','new-task-start-time','new-task-end-time'];
+                    dailyTaskInputs.forEach(id => {
+                        const input = document.getElementById(id);
+                        if (input) input.addEventListener('keypress', (event) => { if (event.key === 'Enter') addTask(); });
+                    });
+                } else {
+                    console.error("Add daily task button not found.");
+                }
 
-            if (addIdeaTaskBtn && ideaTaskInput) {
-                addIdeaTaskBtn.addEventListener('click', addIdeaTask);
-                ideaTaskInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') addIdeaTask(); });
-            } else { 
-                console.error("Add idea task button or input not found."); 
-            }
+                if (addIdeaTaskBtn && ideaTaskInput) {
+                    addIdeaTaskBtn.addEventListener('click', addIdeaTask);
+                    ideaTaskInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') addIdeaTask(); });
+                } else {
+                    console.error("Add idea task button or input not found.");
+                }
 
-            if (modalSaveBtn) modalSaveBtn.addEventListener('click', handleModalSave);
-            if (modalCancelBtn) modalCancelBtn.addEventListener('click', hideTimePrompt);
+                if (modalSaveBtn) modalSaveBtn.addEventListener('click', handleModalSave);
+                if (modalCancelBtn) modalCancelBtn.addEventListener('click', hideTimePrompt);
+            }
 
             // Set up intervals for checking tasks and updating timers
             if (taskCheckIntervalId) clearInterval(taskCheckIntervalId);
@@ -2711,6 +2715,7 @@
             progressTimerIntervalId = setInterval(updateInProgressTimers, TIMER_UPDATE_INTERVAL);
             console.log(`Started progress timer interval (${TIMER_UPDATE_INTERVAL / 1000}s).`);
 
+            listenersInitialized = true;
             console.log("Initialization complete.");
         }
 
