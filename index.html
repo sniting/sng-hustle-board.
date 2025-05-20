@@ -978,26 +978,40 @@
 
         // Gets the current date in YYYY-MM-DD format for a given timezone
         function getCurrentDateString(timeZone) {
-            const now = new Date();
-            return now.toISOString().split('T')[0]; // Simple fallback method
+            try {
+                return new Date().toLocaleDateString('en-CA', { timeZone });
+            } catch (e) {
+                const now = new Date();
+                return now.toISOString().split('T')[0]; // Fallback to UTC
+            }
         }
 
         // Gets the current time in HH:MM (24-hour) format for a given timezone
         function getCurrentTimeString(timeZone) {
-            const now = new Date();
-            return now.toTimeString().substring(0, 5); // Returns HH:MM
+            try {
+                return new Date().toLocaleTimeString('en-GB', {
+                    timeZone,
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                const now = new Date();
+                return now.toTimeString().substring(0, 5); // Fallback
+            }
         }
 
         // Formats the current date and time for display (e.g., "Wednesday, April 30, 2025, 4:23 PM EDT")
         function formatLiveDateTime(timeZone) {
             const now = new Date();
-            return now.toLocaleString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
+            return now.toLocaleString('en-US', {
+                timeZone,
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
                 day: 'numeric',
-                hour: 'numeric', 
-                minute: '2-digit', 
+                hour: 'numeric',
+                minute: '2-digit',
                 hour12: true
             });
         }
