@@ -162,15 +162,77 @@
         #date-selector { padding: 0.6rem 0.8rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.1); cursor: pointer; background-color: rgba(30, 41, 59, 0.7); color: #ffffff; font-weight: 500; }
 
         /* Add Task Form Container Styling */
-         #add-task-form-container { background-color: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 1.75rem; border-radius: 0.75rem; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); transform: rotateX(1deg) rotateY(1deg); margin-bottom: 2.5rem; }
-         #add-task-form-container:hover { transform: rotateX(0deg) rotateY(0deg) scale(1.02) translateZ(15px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); }
-        #add-task-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; align-items: end; }
+         #add-task-form-container {
+            background-color: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.75rem 2.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform: rotateX(1deg) rotateY(1deg);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            min-width: 0;
+        }
+        #add-task-form-container:hover { transform: rotateX(0deg) rotateY(0deg) scale(1.02) translateZ(15px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); }
+        #add-task-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            align-items: end;
+            width: 100%;
+            min-width: 0;
+        }
         #add-task-form > div:nth-child(1) { grid-column: span 2; }
         #add-task-form > div:nth-child(4) { grid-column: span 2; margin-top: 0.5rem; }
-        @media (min-width: 768px) { #add-task-form { grid-template-columns: minmax(150px, 3fr) 1fr 1fr auto; gap: 1rem; } #add-task-form > div:nth-child(1) { grid-column: auto; } #add-task-form > div:nth-child(4) { grid-column: auto; margin-top: 0; } }
+        #add-task-form > div {
+            min-width: 0;
+        }
+        @media (min-width: 768px) {
+            #add-task-form {
+                grid-template-columns: minmax(140px, 2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(110px, 1fr);
+                gap: 0.75rem;
+            }
+            #add-task-form > div:nth-child(1) { grid-column: auto; }
+            #add-task-form > div:nth-child(4) { grid-column: auto; margin-top: 0; }
+        }
+        @media (min-width: 1024px) {
+            #add-task-form {
+                grid-template-columns: minmax(180px, 2.5fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 1fr);
+                gap: 0.9rem;
+            }
+        }
         #add-task-form label { display: block; font-size: 0.9rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem; }
-        #add-task-form input[type="text"], #add-task-form input[type="time"] { width: 100%; border: 1px solid #475569; border-radius: 0.5rem; padding: 0.6rem 0.9rem; box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.1); font-size: 0.9rem; background-color: #1e293b; color: #f1f5f9; }
-        #add-task-form button { background-color: var(--button-primary-bg); color: white; font-weight: 700; padding: 0.6rem 1.5rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; box-shadow: 0 3px 6px rgba(0,0,0,0.15); border: none; cursor: pointer; text-transform: uppercase; }
+        #add-task-form input[type="text"], #add-task-form input[type="time"] {
+            width: 100%;
+            max-width: 100%;
+            border: 1px solid #475569;
+            border-radius: 0.5rem;
+            padding: 0.6rem 0.8rem;
+            box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+            background-color: #1e293b;
+            color: #f1f5f9;
+            box-sizing: border-box;
+        }
+        #add-task-form button {
+            background-color: var(--button-primary-bg);
+            color: white;
+            font-weight: 700;
+            padding: 0.6rem 0.9rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
         #add-task-form button:hover { background-color: var(--button-primary-hover); transform: translateY(-2px) scale(1.02); box-shadow: 0 5px 10px rgba(0,0,0,0.2); }
 
         /* Idea Box Styling */
@@ -459,6 +521,222 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* ======================================================= */
+        /* CUSTOM TAP-FRIENDLY TIME PICKER                          */
+        /* ======================================================= */
+        .time-input-hidden { display: none !important; }
+
+        .time-picker-button {
+            width: 100%;
+            border: 1px solid #475569;
+            border-radius: 0.5rem;
+            padding: 0.65rem 0.85rem;
+            background-color: #1e293b;
+            color: #f1f5f9;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.1);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .time-picker-button:hover { border-color: #94a3b8; background-color: #334155; }
+        .time-picker-button:active { transform: scale(0.98); }
+        .time-picker-button.empty { color: #94a3b8; font-weight: 500; }
+        .time-picker-button .tp-icon {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .time-picker-button .tp-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .task-edit-form .time-picker-button {
+            background-color: #f8fafc; color: #1e293b; border-color: #94a3b8;
+            font-size: 0.875rem; padding: 0.55rem 0.7rem; min-height: 40px;
+        }
+        .task-edit-form .time-picker-button.empty { color: #64748b; }
+        .task-edit-form .time-picker-button:hover { background-color: #e2e8f0; }
+
+        #time-picker-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            z-index: 10010;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        #time-picker-modal.active {
+            display: block;
+        }
+        .time-picker-content {
+            background: var(--modal-content-bg);
+            padding: 1.25rem 1.25rem 1.25rem 1.25rem;
+            border-radius: 1rem;
+            width: calc(100% - 2rem);
+            max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            margin: 2rem auto 2rem auto;
+            position: relative;
+            min-height: fit-content;
+        }
+        .time-picker-title {
+            text-align: center; color: #f1f5f9;
+            font-size: 1.05rem; font-weight: 700;
+            margin-bottom: 0.5rem; letter-spacing: 0.02em;
+        }
+        .time-picker-subtitle {
+            text-align: center; color: #94a3b8;
+            font-size: 0.8rem; margin-bottom: 0.75rem;
+            font-weight: 500; font-style: italic; word-break: break-word;
+        }
+        .time-picker-preview {
+            text-align: center;
+            font-size: 2.25rem; font-weight: 800;
+            color: #fbbf24;
+            font-family: 'Poppins', sans-serif;
+            padding: 0.5rem; margin-bottom: 0.75rem;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 0.6rem;
+            letter-spacing: 0.03em; line-height: 1.1;
+        }
+        .tp-colon { margin: 0 0.15rem; opacity: 0.7; }
+        #tp-preview-ampm {
+            font-size: 1.1rem; margin-left: 0.6rem;
+            color: #cbd5e1; vertical-align: middle; font-weight: 700;
+        }
+        .tp-section { margin-bottom: 0.75rem; }
+        .tp-section-label {
+            color: #cbd5e1; font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            margin-bottom: 0.4rem; text-align: center;
+        }
+        .tp-hour-grid, .tp-minute-grid {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.35rem;
+        }
+        .tp-ampm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .tp-hour-grid button, .tp-minute-grid button, .tp-ampm-row button {
+            background: rgba(71, 85, 105, 0.5);
+            color: #f1f5f9;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+            padding: 0.6rem 0;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.12s ease;
+            min-height: 44px;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .tp-ampm-row button { font-size: 1.05rem; min-height: 48px; letter-spacing: 0.05em; }
+        .tp-hour-grid button:hover, .tp-minute-grid button:hover, .tp-ampm-row button:hover {
+            background: rgba(100, 116, 139, 0.7);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .tp-hour-grid button:active, .tp-minute-grid button:active, .tp-ampm-row button:active {
+            transform: scale(0.92);
+        }
+        .tp-hour-grid button.selected, .tp-minute-grid button.selected, .tp-ampm-row button.selected {
+            background: var(--accent-todo);
+            color: #1e293b;
+            border-color: #fbbf24;
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.4), 0 4px 10px rgba(245, 158, 11, 0.4);
+        }
+        .tp-buttons {
+            display: grid; grid-template-columns: auto 1fr 1fr;
+            gap: 0.5rem; margin-top: 0.85rem; padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tp-buttons button {
+            padding: 0.7rem 0.5rem; border-radius: 0.5rem; font-weight: 700;
+            border: none; cursor: pointer; font-size: 0.85rem;
+            text-transform: uppercase; letter-spacing: 0.03em;
+            min-height: 46px; transition: all 0.15s ease;
+            -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+        }
+        .tp-buttons button:active { transform: scale(0.96); }
+        #tp-clear { background: #475569; color: #f1f5f9; padding-left: 0.9rem; padding-right: 0.9rem; }
+        #tp-clear:hover { background: #334155; }
+        #tp-cancel { background: #64748b; color: white; }
+        #tp-cancel:hover { background: #475569; }
+        #tp-done { background: var(--button-secondary-bg); color: white; }
+        #tp-done:hover { background: var(--button-secondary-hover); }
+
+        /* iPad and Tablet */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .time-picker-content {
+                margin: 2.5rem auto 2.5rem auto;
+                max-width: 500px;
+            }
+        }
+
+        /* Mobile and Small Tablets */
+        @media (max-width: 768px) {
+            #time-picker-modal {
+                padding: 0;
+            }
+            .time-picker-content {
+                padding: 1rem 0.9rem 1rem 0.9rem;
+                margin: 1.5rem auto 1.5rem auto;
+                width: calc(100% - 1.5rem);
+            }
+            .time-picker-button {
+                font-size: 0.8rem;
+                padding: 0.6rem 0.75rem;
+                min-height: 42px;
+            }
+            .time-picker-button .tp-icon {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 420px) {
+            #time-picker-modal {
+                padding: 0;
+            }
+            .time-picker-content {
+                padding: 0.9rem 0.75rem 0.9rem 0.75rem;
+                margin: 1rem auto 1.5rem auto;
+                width: calc(100% - 1rem);
+            }
+            .time-picker-preview { font-size: 1.9rem; padding: 0.4rem; }
+            .tp-hour-grid, .tp-minute-grid { gap: 0.3rem; }
+            .tp-hour-grid button, .tp-minute-grid button { padding: 0.55rem 0; font-size: 0.95rem; min-height: 42px; }
+            .tp-buttons button { font-size: 0.78rem; padding: 0.65rem 0.3rem; }
+            #tp-clear { padding-left: 0.6rem; padding-right: 0.6rem; }
+            .time-picker-button {
+                font-size: 0.75rem;
+                padding: 0.55rem 0.7rem;
+                min-height: 40px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -597,6 +875,37 @@
         </div>
     </div>
 
+    <!-- ===== CUSTOM TAP-FRIENDLY TIME PICKER MODAL ===== -->
+    <div id="time-picker-modal" role="dialog" aria-modal="true" aria-labelledby="tp-title">
+        <div class="time-picker-content">
+            <h3 id="tp-title" class="time-picker-title">Pick a Time</h3>
+            <p id="tp-subtitle" class="time-picker-subtitle"></p>
+            <div class="time-picker-preview" aria-live="polite">
+                <span id="tp-preview-hour">12</span><span class="tp-colon">:</span><span id="tp-preview-minute">00</span><span id="tp-preview-ampm">AM</span>
+            </div>
+            <div class="tp-section">
+                <div class="tp-section-label">Hour</div>
+                <div class="tp-hour-grid" id="tp-hour-grid"></div>
+            </div>
+            <div class="tp-section">
+                <div class="tp-section-label">AM / PM</div>
+                <div class="tp-ampm-row">
+                    <button type="button" class="tp-ampm-btn" data-ampm="AM">AM</button>
+                    <button type="button" class="tp-ampm-btn" data-ampm="PM">PM</button>
+                </div>
+            </div>
+            <div class="tp-section">
+                <div class="tp-section-label">Minute</div>
+                <div class="tp-minute-grid" id="tp-minute-grid"></div>
+            </div>
+            <div class="tp-buttons">
+                <button type="button" id="tp-clear">Clear</button>
+                <button type="button" id="tp-cancel">Cancel</button>
+                <button type="button" id="tp-done">Done</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-notification" role="alert" aria-live="polite" aria-atomic="true"></div>
     <script>
         // ============================================================================
@@ -639,6 +948,7 @@
         let auth;
         let currentUser = null;
         let currentUserId = null;
+        let isAppInitialized = false; // DUPLICATE-FIX: guards against double init from auth race
 
         try {
             // Initialize Firebase App if it hasn't been initialized yet
@@ -955,7 +1265,8 @@
             hustleTasksCollection = null;
             hustleIdeaBoxCollection = null;
             hustleArchiveCollection = null;
-            
+            isAppInitialized = false; // DUPLICATE-FIX: allow fresh init on next login
+
             // Clear local remember data
             clearRememberForDay();
             
@@ -995,8 +1306,14 @@
             } else {
                 console.warn("Database not initialized, using local storage only");
             }
-            
-            // Initialize the app with the current date
+
+            // DUPLICATE-FIX: prevent the auth-race from running initializeApp twice,
+            // which was causing two concurrent displayTasksForDate calls.
+            if (isAppInitialized) {
+                console.log("App already initialized — skipping duplicate init.");
+                return;
+            }
+            isAppInitialized = true;
             initializeApp();
         }
 
@@ -1199,9 +1516,57 @@
         }
 
         // --- State Variables ---
-        let draggedElement = null;      // Stores the element being dragged
-        let draggedElementType = null;  // Stores the type ('kanban-task' or 'idea-task') of the dragged element
-        let currentSelectedDate = '';   // Stores the currently selected date string (YYYY-MM-DD)
+        let draggedElement = null;
+        let draggedElementType = null;
+        let currentSelectedDate = '';
+        // DUPLICATE-FIX: monotonically-increasing token. Every call to displayTasksForDate
+        // gets a fresh token. If the token has changed by the time the async load completes,
+        // that render is a stale duplicate and gets aborted. This kills the race condition
+        // between checkRememberedLogin + onAuthStateChanged both triggering a render.
+        let loadToken = 0;
+
+        /**
+         * DUPLICATE-FIX: generate a stable, globally-unique task ID that is persisted
+         * with the task in Firestore. Lets dedup identify identity across reloads.
+         */
+        function generateTaskId() {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return 't_' + crypto.randomUUID();
+            }
+            return 't_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 11);
+        }
+
+        /**
+         * DUPLICATE-FIX: remove duplicates from a tasks array.
+         * Primary key: task.id (stable UUID).
+         * Fallback key: content-hash — catches legacy data saved without an ID,
+         * AND catches the case where two IDs exist for what is clearly the same task
+         * (e.g. tasks that got doubled by the race condition before this fix).
+         */
+        function dedupTasks(tasks) {
+            if (!Array.isArray(tasks)) return [];
+            const seenIds = new Set();
+            const seenContent = new Set();
+            const result = [];
+            for (const task of tasks) {
+                if (!task || typeof task !== 'object') continue;
+                const text = (task.text || '').trim();
+                if (!text) continue;
+                if (task.id) {
+                    if (seenIds.has(task.id)) continue;
+                    seenIds.add(task.id);
+                }
+                const contentKey = `${text}|${task.startTime || ''}|${task.endTime || ''}|${task.completionDate || ''}`;
+                if (seenContent.has(contentKey)) {
+                    console.log(`dedupTasks: dropped content-duplicate "${text}"`);
+                    continue;
+                }
+                seenContent.add(contentKey);
+                if (!task.id) task.id = generateTaskId();
+                result.push(task);
+            }
+            return result;
+        }
         let taskCheckIntervalId = null; // Stores the interval ID for checking task start times
         let progressTimerIntervalId = null; // Stores the interval ID for updating progress bars
         let lastMinuteIntervalId = null; // Stores the interval ID for faster updates in the last minute
@@ -1363,6 +1728,218 @@
             }, duration);
         }
 
+        // =====================================================================
+        // CUSTOM TIME PICKER — tap-friendly, works on Mac/iPad/iPhone identically
+        // =====================================================================
+        const timePickerModal = document.getElementById('time-picker-modal');
+        const tpHourGrid = document.getElementById('tp-hour-grid');
+        const tpMinuteGrid = document.getElementById('tp-minute-grid');
+        const tpPreviewHour = document.getElementById('tp-preview-hour');
+        const tpPreviewMinute = document.getElementById('tp-preview-minute');
+        const tpPreviewAmPm = document.getElementById('tp-preview-ampm');
+        const tpSubtitle = document.getElementById('tp-subtitle');
+        const tpDoneBtn = document.getElementById('tp-done');
+        const tpCancelBtn = document.getElementById('tp-cancel');
+        const tpClearBtn = document.getElementById('tp-clear');
+        const tpAmPmButtons = document.querySelectorAll('.tp-ampm-btn');
+
+        const tpState = { hour: 12, minute: 0, ampm: 'AM', callback: null };
+
+        function initTimePickerGrids() {
+            if (!tpHourGrid || !tpMinuteGrid) return;
+            tpHourGrid.innerHTML = '';
+            for (let h = 1; h <= 12; h++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = h;
+                btn.dataset.hour = h;
+                btn.setAttribute('aria-label', `Hour ${h}`);
+                btn.addEventListener('click', (e) => { e.preventDefault(); tpState.hour = h; updateTimePickerUI(); });
+                tpHourGrid.appendChild(btn);
+            }
+            tpMinuteGrid.innerHTML = '';
+            for (let m = 0; m < 60; m += 5) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = m.toString().padStart(2, '0');
+                btn.dataset.minute = m;
+                btn.setAttribute('aria-label', `${m} minutes`);
+                btn.addEventListener('click', (e) => { e.preventDefault(); tpState.minute = m; updateTimePickerUI(); });
+                tpMinuteGrid.appendChild(btn);
+            }
+            tpAmPmButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    tpState.ampm = btn.dataset.ampm;
+                    updateTimePickerUI();
+                });
+            });
+        }
+
+        function updateTimePickerUI() {
+            if (!tpPreviewHour) return;
+            tpPreviewHour.textContent = tpState.hour;
+            tpPreviewMinute.textContent = tpState.minute.toString().padStart(2, '0');
+            tpPreviewAmPm.textContent = tpState.ampm;
+            tpHourGrid.querySelectorAll('button').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.dataset.hour, 10) === tpState.hour);
+            });
+            const snappedMin = (Math.round(tpState.minute / 5) * 5) % 60;
+            tpMinuteGrid.querySelectorAll('button').forEach(btn => {
+                const m = parseInt(btn.dataset.minute, 10);
+                btn.classList.toggle('selected', m === tpState.minute || m === snappedMin);
+            });
+            tpAmPmButtons.forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.ampm === tpState.ampm);
+            });
+        }
+
+        /**
+         * Open the custom time picker.
+         * @param {string} currentValue - 24-hour HH:MM, or '' for default (current time)
+         * @param {function} callback - receives new 24-hour HH:MM string, or '' if cleared
+         * @param {string} [subtitle] - optional context under the title
+         */
+        function openTimePicker(currentValue, callback, subtitle) {
+            if (!timePickerModal) return;
+            tpState.callback = callback;
+            if (tpSubtitle) {
+                tpSubtitle.textContent = subtitle || '';
+                tpSubtitle.style.display = subtitle ? '' : 'none';
+            }
+            if (currentValue && /^\d{2}:\d{2}$/.test(currentValue)) {
+                const [h24, m] = currentValue.split(':').map(Number);
+                tpState.ampm = h24 >= 12 ? 'PM' : 'AM';
+                let h12 = h24 % 12; if (h12 === 0) h12 = 12;
+                tpState.hour = h12;
+                tpState.minute = m;
+            } else {
+                // Default to current Boston time, snapped to nearest 5 min
+                const now = new Date().toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' });
+                const [h24, m] = now.split(':').map(Number);
+                tpState.ampm = h24 >= 12 ? 'PM' : 'AM';
+                let h12 = h24 % 12; if (h12 === 0) h12 = 12;
+                tpState.hour = h12;
+                let snapped = Math.round(m / 5) * 5; if (snapped >= 60) snapped = 55;
+                tpState.minute = snapped;
+            }
+            updateTimePickerUI();
+            timePickerModal.classList.add('active');
+            // Scroll modal to top when opening
+            setTimeout(() => {
+                if (timePickerModal) {
+                    timePickerModal.scrollTop = 0;
+                }
+            }, 10);
+            // Prevent body scroll on mobile
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        }
+
+        function closeTimePicker() {
+            if (!timePickerModal) return;
+            timePickerModal.classList.remove('active');
+            tpState.callback = null;
+            // Restore body scroll
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
+
+        function confirmTimePicker() {
+            let h24 = tpState.hour;
+            if (tpState.ampm === 'AM' && h24 === 12) h24 = 0;
+            else if (tpState.ampm === 'PM' && h24 !== 12) h24 += 12;
+            const timeStr = `${h24.toString().padStart(2, '0')}:${tpState.minute.toString().padStart(2, '0')}`;
+            const cb = tpState.callback;
+            closeTimePicker();
+            if (cb) cb(timeStr);
+        }
+
+        function clearTimePickerValue() {
+            const cb = tpState.callback;
+            closeTimePicker();
+            if (cb) cb('');
+        }
+
+        if (tpDoneBtn) tpDoneBtn.addEventListener('click', (e) => { e.preventDefault(); confirmTimePicker(); });
+        if (tpCancelBtn) tpCancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeTimePicker(); });
+        if (tpClearBtn) tpClearBtn.addEventListener('click', (e) => { e.preventDefault(); clearTimePickerValue(); });
+        if (timePickerModal) {
+            timePickerModal.addEventListener('click', (e) => {
+                if (e.target === timePickerModal) closeTimePicker();
+            });
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && timePickerModal && timePickerModal.classList.contains('active')) {
+                closeTimePicker();
+            }
+        });
+        initTimePickerGrids();
+
+        /**
+         * Attach the custom picker to a native <input type="time">. The input
+         * stays hidden but keeps its value, so all existing code that reads
+         * `.value` still works unchanged.
+         */
+        function enhanceTimeInput(input, options = {}) {
+            if (!input || input.dataset.tpEnhanced === 'true') return input._tpButton;
+            input.dataset.tpEnhanced = 'true';
+            input.classList.add('time-input-hidden');
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'time-picker-button';
+            btn.setAttribute('aria-label', options.ariaLabel || input.getAttribute('aria-label') || 'Pick a time');
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'tp-icon';
+            iconSpan.textContent = '🕐';
+            iconSpan.setAttribute('aria-hidden', 'true');
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'tp-label';
+            btn.appendChild(iconSpan);
+            btn.appendChild(labelSpan);
+
+            const updateLabel = () => {
+                const val = input.value;
+                if (val && /^\d{2}:\d{2}$/.test(val)) {
+                    // formatTimeTo12Hour is defined later; safe because this runs on click, not now
+                    labelSpan.textContent = formatTimeTo12Hour(val);
+                    btn.classList.remove('empty');
+                } else {
+                    labelSpan.textContent = options.placeholder || 'Select time';
+                    btn.classList.add('empty');
+                }
+            };
+            updateLabel();
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openTimePicker(input.value, (newTime) => {
+                    input.value = newTime || '';
+                    updateLabel();
+                    try { input.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+                }, options.subtitle);
+            });
+
+            input._tpButton = btn;
+            input._tpUpdate = updateLabel;
+            input.insertAdjacentElement('afterend', btn);
+            return btn;
+        }
+
+        /** Programmatically set a time input's value AND refresh the picker button label. */
+        function setTimeInputValue(input, value) {
+            if (!input) return;
+            input.value = value || '';
+            if (typeof input._tpUpdate === 'function') input._tpUpdate();
+        }
+
+        // Enhance the static time inputs on page load. (Dynamic ones in edit-mode
+        // are enhanced when created — see enterEditMode.)
+        document.querySelectorAll('input[type="time"]').forEach(inp => enhanceTimeInput(inp));
+
         // --- Utility Functions ---
 
         // Gets the current date in YYYY-MM-DD format for a given timezone
@@ -1508,18 +2085,35 @@
                 console.log(`Fetching document: ${docRef.path}`);
                 const docSnap = await docRef.get(); // Attempt to get the document
 
-                if (docSnap.exists) { // Check the boolean property for Compat SDK
-                    console.log(`Document found for ${dateString}. Data:`, docSnap.data());
-                    const data = docSnap.data() || {}; // Use empty object if data is null/undefined
+                if (docSnap.exists) {
+                    const data = docSnap.data() || {};
 
-                    // Validate the structure of the data, providing defaults if fields are missing/invalid
-                    const tasks = {
-                        todo: Array.isArray(data.todo) ? data.todo : [],
-                        inprogress: Array.isArray(data.inprogress) ? data.inprogress : [],
-                        done: Array.isArray(data.done) ? data.done : []
+                    // DUPLICATE-FIX: dedup on load + self-heal.
+                    // If dedup removes anything, write the cleaned data back so the
+                    // bad data stops appearing on future loads across all devices.
+                    const origCounts = {
+                        todo: Array.isArray(data.todo) ? data.todo.length : 0,
+                        inprogress: Array.isArray(data.inprogress) ? data.inprogress.length : 0,
+                        done: Array.isArray(data.done) ? data.done.length : 0
                     };
-                    
-                    // Save to localStorage as backup but don't return localStorage data
+                    const tasks = {
+                        todo: dedupTasks(Array.isArray(data.todo) ? data.todo : []),
+                        inprogress: dedupTasks(Array.isArray(data.inprogress) ? data.inprogress : []),
+                        done: dedupTasks(Array.isArray(data.done) ? data.done : [])
+                    };
+                    const removed = (origCounts.todo - tasks.todo.length)
+                                  + (origCounts.inprogress - tasks.inprogress.length)
+                                  + (origCounts.done - tasks.done.length);
+                    if (removed > 0) {
+                        console.log(`Self-heal: cleaned ${removed} duplicate task(s) for ${dateString}`);
+                        try {
+                            await docRef.set(tasks);
+                            showToast(`Cleaned up ${removed} duplicate task${removed === 1 ? '' : 's'}.`);
+                        } catch (writeErr) {
+                            console.error('Failed to write back cleaned data:', writeErr);
+                        }
+                    }
+
                     saveTasksToLocalStorage(dateString, tasks);
                     return tasks;
                 } else if (legacyDocRef) {
@@ -1834,17 +2428,17 @@
         // Creates a Kanban task element (div) from task data
         function createTaskElement(taskData, columnId) {
             // Generate a unique ID for the element if not provided (e.g., from Firestore)
-            const taskId = taskData.firestoreId || `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            // DUPLICATE-FIX: reuse stored ID if present, else generate stable UUID.
+            const taskId = taskData.id || taskData.firestoreId || generateTaskId();
             const { text, startTime, endTime, completionDate } = taskData;
 
-            // Create the main task div
             const task = document.createElement('div');
             task.classList.add('kanban-task');
-            task.setAttribute('draggable', 'true'); // Make it draggable
+            task.setAttribute('draggable', 'true');
             task.id = taskId;
 
-            // Store task data in dataset attributes for easy access
             task.dataset.type = 'kanban-task';
+            task.dataset.taskId = taskId; // DUPLICATE-FIX: persisted through saves
             task.dataset.text = text || '';
             if (startTime) task.dataset.startTime = startTime; // Only set if startTime is not null/empty
             if (endTime) task.dataset.endTime = endTime;       // Only set if endTime is not null/empty
@@ -2288,12 +2882,19 @@
             const startTimeDiv = document.createElement('div');
             const startTimeInput = document.createElement('input');
             startTimeInput.type = 'time';
-            startTimeInput.value = taskElement.dataset.startTime || ''; // Pre-fill with existing or empty
+            startTimeInput.value = taskElement.dataset.startTime || '';
+            const startLabel = document.createElement('label');
+            startLabel.textContent = 'Start';
+            startTimeDiv.appendChild(startLabel);
             startTimeDiv.appendChild(startTimeInput);
+
             const endTimeDiv = document.createElement('div');
             const endTimeInput = document.createElement('input');
             endTimeInput.type = 'time';
-            endTimeInput.value = taskElement.dataset.endTime || ''; // Pre-fill with existing or empty
+            endTimeInput.value = taskElement.dataset.endTime || '';
+            const endLabel = document.createElement('label');
+            endLabel.textContent = 'End';
+            endTimeDiv.appendChild(endLabel);
             endTimeDiv.appendChild(endTimeInput);
             timeInputsDiv.appendChild(startTimeDiv);
             timeInputsDiv.appendChild(endTimeDiv);
@@ -2317,7 +2918,11 @@
             editForm.appendChild(buttonsDiv);
             taskElement.appendChild(editForm);
 
-            textInput.focus(); // Focus the text input
+            // Attach the custom picker to the newly-created time inputs.
+            enhanceTimeInput(startTimeInput, { placeholder: 'Start time', subtitle: `Start time for "${taskElement.dataset.text || 'task'}"` });
+            enhanceTimeInput(endTimeInput, { placeholder: 'End time', subtitle: `End time for "${taskElement.dataset.text || 'task'}"` });
+
+            textInput.focus();
         }
 
         // Exits edit mode for a Kanban task element
@@ -2440,18 +3045,32 @@
          * @param {string} dateString - The date in YYYY-MM-DD format.
          */
         async function displayTasksForDate(dateString) {
-            currentSelectedDate = dateString; // Update the global state
-            const formattedDate = formatDisplayDate(dateString); // Format for display
-            selectedDateDisplay.textContent = `Loading tasks for ${formattedDate}...`; // Update UI
-            
-            if (dateSelector) dateSelector.value = dateString; // Sync date picker input
-            clearBoard(); // Clear existing tasks from the board
+            // DUPLICATE-FIX: claim a fresh token for this render. If another call
+            // to displayTasksForDate starts while our await is in flight, our
+            // token will no longer match the global and we'll abort before
+            // touching the DOM. This eliminates the concurrent-render race.
+            const myToken = ++loadToken;
+
+            currentSelectedDate = dateString;
+            const formattedDate = formatDisplayDate(dateString);
+            selectedDateDisplay.textContent = `Loading tasks for ${formattedDate}...`;
+
+            if (dateSelector) dateSelector.value = dateString;
+            clearBoard();
 
             try {
-                // Load tasks from Firestore or localStorage, but avoid duplication
                 const tasksForDay = await loadTasksFromFirestore(dateString);
 
-                // Update display message on successful load
+                // DUPLICATE-FIX: if another render started after us, abandon ours.
+                if (myToken !== loadToken) {
+                    console.log(`Stale displayTasksForDate (token ${myToken} vs ${loadToken}) — aborting render.`);
+                    return;
+                }
+
+                // Second safety: clear any tasks a stale render may have appended
+                // before we regained control.
+                clearBoard();
+
                 selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate}`;
 
                 // Populate Kanban columns with loaded tasks
@@ -2483,12 +3102,13 @@
                 updateInProgressTimers(); // Initialize/update progress timers
 
             } catch (error) {
-                // Error is logged in detail within loadTasksFromFirestore
                 console.error("Error in displayTasksForDate:", error);
+                if (myToken !== loadToken) {
+                    console.log(`Stale displayTasksForDate catch — aborting.`);
+                    return;
+                }
+                clearBoard();
                 selectedDateDisplay.textContent = `Showing tasks for: ${formattedDate} (Offline)`;
-                
-                // We shouldn't need this fallback anymore since loadTasksFromFirestore already handles it
-                // But keeping it as an extra safety measure
                 const tasksForDay = loadTasksFromLocalStorage(dateString);
                 
                 // Use the same deduplication logic for localStorage fallback
@@ -2543,12 +3163,11 @@
                             console.warn("Skipping save for task in edit mode:", task.id);
                             return;
                         }
-                        // Extract task data from dataset attributes
                         const taskData = {
+                            id: task.dataset.taskId || task.id || generateTaskId(), // DUPLICATE-FIX: persist stable ID
                             text: task.dataset.text || '',
-                            startTime: task.dataset.startTime || null, // Will be null if attribute not set
-                            endTime: task.dataset.endTime || null,     // Will be null if attribute not set
-                            // Retrieve completion date carefully, ensuring 'null' string isn't saved
+                            startTime: task.dataset.startTime || null,
+                            endTime: task.dataset.endTime || null,
                             completionDate: task.dataset.completionDate && task.dataset.completionDate !== 'null' ? task.dataset.completionDate : null
                         };
                         // Only save tasks that have text content
@@ -2563,7 +3182,11 @@
                 }
             });
 
-            // Save to Firestore and localStorage
+            // DUPLICATE-FIX: dedup at save boundary as a hard safety net
+            tasksForCurrentDate.todo = dedupTasks(tasksForCurrentDate.todo);
+            tasksForCurrentDate.inprogress = dedupTasks(tasksForCurrentDate.inprogress);
+            tasksForCurrentDate.done = dedupTasks(tasksForCurrentDate.done);
+
             try {
                 await saveTasksToFirestore(currentSelectedDate, tasksForCurrentDate);
             } catch (error) {
@@ -2659,8 +3282,8 @@
 
             // Clear the form fields
             taskInput.value = '';
-            startTimeInput.value = ''; // Clear time inputs regardless
-            endTimeInput.value = '';   // Clear time inputs regardless
+            setTimeInputValue(startTimeInput, '');
+            setTimeInputValue(endTimeInput, '');
 
             // Save the updated board state to Firestore
             await saveCurrentBoardState();
@@ -2934,20 +3557,23 @@
         // Shows the modal to set start/end times for a scheduled idea task
         function showTimePrompt(taskText) {
             if (!timePromptModal || !modalTaskText || !modalStartTimeInput || !modalEndTimeInput) return;
-            modalTaskText.textContent = `Scheduling: "${taskText}"`; // Display task text
-            modalStartTimeInput.value = ''; // Clear inputs
-            modalEndTimeInput.value = '';
-            timePromptModal.classList.add('active'); // Make modal visible
-            modalStartTimeInput.focus(); // Focus the start time input
+            modalTaskText.textContent = `Scheduling: "${taskText}"`;
+            setTimeInputValue(modalStartTimeInput, '');
+            setTimeInputValue(modalEndTimeInput, '');
+            timePromptModal.classList.add('active');
+            // Auto-open the custom picker for the start time — saves a tap.
+            setTimeout(() => {
+                if (modalStartTimeInput._tpButton) modalStartTimeInput._tpButton.click();
+            }, 150);
         }
 
         // Hides the time prompt modal and resets state
         function hideTimePrompt() {
             if (!timePromptModal) return;
-            timePromptModal.classList.remove('active'); // Hide modal
-            ideaTaskToSchedule = null; // Clear the task data being scheduled
-            modalStartTimeInput.value = '';
-            modalEndTimeInput.value = '';
+            timePromptModal.classList.remove('active');
+            ideaTaskToSchedule = null;
+            setTimeInputValue(modalStartTimeInput, '');
+            setTimeInputValue(modalEndTimeInput, '');
         }
 
         // Handles saving the scheduled task from the modal
