@@ -161,6 +161,56 @@
         #date-selector-container label { margin-right: 0.5rem; font-weight: 700; color: #f1f5f9; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         #date-selector { padding: 0.6rem 0.8rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; box-shadow: inset 0 1px 3px 0 rgba(0,0,0,0.1); cursor: pointer; background-color: rgba(30, 41, 59, 0.7); color: #ffffff; font-weight: 500; }
 
+        /* Time Input Toggle Switch */
+        #time-input-toggle-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        #time-input-toggle-container label {
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0;
+            user-select: none;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #475569;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .toggle-switch.active {
+            background: var(--accent-todo);
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
         /* Add Task Form Container Styling */
          #add-task-form-container {
             background-color: rgba(30, 41, 59, 0.85);
@@ -289,6 +339,229 @@
         .kanban-task:hover .delete-task-btn { opacity: 0.8; }
         .delete-task-btn:hover { opacity: 1; color: #ef4444; transform: scale(1.15) rotate(10deg); }
         .kanban-task.editing { cursor: default; border-left-color: var(--button-primary-bg); }
+
+        /* Sub-task Planning Styles - Inside Task Cards */
+        .task-has-subtasks {
+            cursor: pointer;
+            position: relative;
+        }
+        .task-has-subtasks::after {
+            content: '📋';
+            position: absolute;
+            top: 0.5rem;
+            right: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        .subtask-planning-section {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        .subtask-planning-section.visible {
+            display: block;
+        }
+        .subtask-plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .subtask-plan-header h5 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-todo);
+            margin: 0;
+        }
+        .subtask-plan-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .subtask-plan-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 0.4rem;
+            align-items: center;
+            padding: 0.4rem;
+            background: rgba(71, 85, 105, 0.3);
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
+        }
+        .subtask-plan-item input {
+            width: 100%;
+            border: 1px solid #475569;
+            border-radius: 0.25rem;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.75rem;
+            background-color: #1e293b;
+            color: #f1f5f9;
+            box-sizing: border-box;
+        }
+        .subtask-plan-add-btn {
+            padding: 0.4rem 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            background: var(--button-secondary-bg);
+            color: white;
+            width: 100%;
+        }
+        .subtask-plan-add-btn:hover {
+            background: var(--button-secondary-hover);
+            transform: translateY(-1px);
+        }
+        .subtask-plan-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        .subtask-plan-remove:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+        .subtask-plan-save-btn {
+            padding: 0.4rem 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            background: #10b981;
+            color: white;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        .subtask-plan-save-btn:hover {
+            background: #059669;
+        }
+
+        /* Sub-task Display in Kanban Cards */
+        .task-subtasks {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .subtasks-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.4rem 0.6rem;
+            background: rgba(71, 85, 105, 0.3);
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .subtasks-toggle:hover {
+            background: rgba(71, 85, 105, 0.5);
+        }
+        .subtasks-toggle-text {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-todo);
+        }
+        .subtasks-toggle-icon {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            transition: transform 0.2s ease;
+        }
+        .subtasks-toggle.expanded .subtasks-toggle-icon {
+            transform: rotate(180deg);
+        }
+        .subtasks-dropdown {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 0.375rem;
+        }
+        .subtasks-dropdown.visible {
+            display: block;
+        }
+        .subtask-item {
+            padding: 0.5rem;
+            margin-bottom: 0.4rem;
+            background: rgba(71, 85, 105, 0.3);
+            border-left: 3px solid var(--accent-todo);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+        .subtask-item:last-child {
+            margin-bottom: 0;
+        }
+        .subtask-item.completed {
+            opacity: 0.6;
+            border-left-color: #10b981;
+        }
+        .subtask-item.active {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+        }
+        .subtask-name {
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 0.25rem;
+        }
+        .subtask-time {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .subtask-countdown {
+            font-weight: 700;
+            color: var(--accent-todo);
+            font-family: 'Poppins', monospace;
+        }
+        .subtask-countdown.urgent {
+            color: #f87171;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .subtask-check {
+            cursor: pointer;
+            font-size: 1rem;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+        }
+        .subtask-check:hover {
+            color: #10b981;
+            transform: scale(1.2);
+        }
+        .subtask-item.completed .subtask-check {
+            color: #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .subtask-input-group {
+                grid-template-columns: 1fr;
+            }
+            .subtask-input-group > div:last-child {
+                grid-column: 1;
+            }
+        }
 
         /* Highlight effect for auto-moved tasks */
         .task-just-moved { background-color: rgba(250, 204, 21, 0.3); animation: highlight-fade 1.8s ease-out; }
@@ -596,20 +869,45 @@
         }
         .time-picker-content {
             background: var(--modal-content-bg);
-            padding: 1.25rem 1.25rem 1.25rem 1.25rem;
+            padding: 1.25rem;
             border-radius: 1rem;
             width: calc(100% - 2rem);
-            max-width: 420px;
+            max-width: 540px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-            margin: 2rem auto 2rem auto;
+            margin: 2rem auto;
             position: relative;
             min-height: fit-content;
+            overflow-y: auto;
+            max-height: calc(100vh - 4rem);
+        }
+
+        @media (max-width: 768px) {
+            .time-picker-content {
+                max-width: 95%;
+                width: calc(100% - 1rem);
+                padding: 1rem;
+                margin: 1rem auto;
+                max-height: calc(100vh - 2rem);
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .time-picker-content {
+                max-width: 480px;
+            }
         }
         .time-picker-title {
             text-align: center; color: #f1f5f9;
             font-size: 1.05rem; font-weight: 700;
-            margin-bottom: 0.5rem; letter-spacing: 0.02em;
+            margin-bottom: 0.75rem; letter-spacing: 0.02em;
+        }
+
+        @media (max-width: 768px) {
+            .time-picker-title {
+                font-size: 1.15rem;
+                margin-bottom: 1rem;
+            }
         }
         .time-picker-subtitle {
             text-align: center; color: #94a3b8;
@@ -671,12 +969,12 @@
         }
         .tp-buttons {
             display: grid; grid-template-columns: auto 1fr 1fr;
-            gap: 0.5rem; margin-top: 0.85rem; padding-top: 0.75rem;
+            gap: 0.5rem; margin-top: 1rem; padding-top: 0.75rem;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
         .tp-buttons button {
             padding: 0.7rem 0.5rem; border-radius: 0.5rem; font-weight: 700;
-            border: none; cursor: pointer; font-size: 0.85rem;
+            border: none; cursor: pointer; font-size: 0.8rem;
             text-transform: uppercase; letter-spacing: 0.03em;
             min-height: 46px; transition: all 0.15s ease;
             -webkit-tap-highlight-color: transparent; touch-action: manipulation;
@@ -688,6 +986,182 @@
         #tp-cancel:hover { background: #475569; }
         #tp-done { background: var(--button-secondary-bg); color: white; }
         #tp-done:hover { background: var(--button-secondary-hover); }
+
+        @media (max-width: 768px) {
+            .tp-buttons {
+                gap: 0.75rem;
+                margin-top: 1.25rem;
+            }
+            .tp-buttons button {
+                font-size: 0.85rem;
+                min-height: 50px;
+                padding: 0.8rem 0.6rem;
+            }
+        }
+
+        /* Dual Clock Side-by-Side Layout */
+        .tp-clocks-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1rem 0;
+            padding: 0 1rem;
+        }
+        .tp-clock-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 0;
+        }
+        .tp-clock-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .tp-analog-clock {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            border: 3px solid var(--accent-todo);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+        .tp-clock-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: var(--accent-todo);
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+        }
+        .tp-clock-number {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .tp-clock-number:hover {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--accent-todo);
+            transform: scale(1.15);
+        }
+        .tp-clock-number.selected {
+            background: var(--accent-todo);
+            color: #1e293b;
+            font-weight: 800;
+            transform: scale(1.2);
+        }
+        .tp-hour-hand, .tp-minute-hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            pointer-events: none;
+        }
+        .tp-hour-hand {
+            width: 3px;
+            height: 35px;
+            background: linear-gradient(to top, var(--accent-todo), rgba(251, 191, 36, 0.3));
+            border-radius: 1.5px 1.5px 0 0;
+            margin-left: -1.5px;
+            z-index: 8;
+        }
+        .tp-minute-hand {
+            width: 2px;
+            height: 50px;
+            background: linear-gradient(to top, #f59e0b, rgba(245, 158, 11, 0.3));
+            border-radius: 1px 1px 0 0;
+            margin-left: -1px;
+            z-index: 9;
+        }
+        .tp-time-display {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent-todo);
+            margin: 0.6rem 0 0.4rem 0;
+            font-family: 'Poppins', monospace;
+            min-height: 1.6rem;
+        }
+        .tp-ampm-toggle {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.4rem;
+        }
+        .tp-ampm-btn {
+            padding: 0.3rem 0.7rem;
+            background: rgba(71, 85, 105, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.3rem;
+            color: #cbd5e1;
+            font-size: 0.65rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .tp-ampm-btn.selected {
+            background: var(--accent-todo);
+            color: #1e293b;
+            border-color: var(--accent-todo);
+        }
+        .tp-ampm-btn:hover:not(.selected) {
+            background: rgba(100, 116, 139, 0.7);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .tp-clocks-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                padding: 0 0.5rem;
+            }
+            .tp-analog-clock {
+                width: 220px;
+                height: 220px;
+            }
+            .tp-clock-number {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Tablet */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .tp-clocks-container {
+                gap: 1rem;
+                padding: 0 0.75rem;
+            }
+            .tp-analog-clock {
+                width: 160px;
+                height: 160px;
+            }
+            .tp-clock-number {
+                width: 24px;
+                height: 24px;
+                font-size: 0.8rem;
+            }
+        }
 
         /* iPad and Tablet */
         @media (max-width: 1024px) and (min-width: 769px) {
@@ -777,6 +1251,14 @@
     </div>
 
     <div id="main-content-wrapper" class="hidden" role="main">
+        <!-- Time Input Toggle Switch -->
+        <div id="time-input-toggle-container">
+            <label for="time-input-toggle">Clock Picker</label>
+            <div class="toggle-switch active" id="time-input-toggle" role="switch" aria-checked="true" tabindex="0">
+                <div class="toggle-slider"></div>
+            </div>
+        </div>
+
         <header role="banner">
             <h1 id="main-title" class="text-4xl font-extrabold text-center">SNG's Hustle Board</h1>
             <div id="user-controls" role="navigation" aria-label="User menu">
@@ -875,33 +1357,51 @@
         </div>
     </div>
 
-    <!-- ===== CUSTOM TAP-FRIENDLY TIME PICKER MODAL ===== -->
+    <!-- ===== DUAL ANALOG CLOCK TIME PICKER MODAL ===== -->
     <div id="time-picker-modal" role="dialog" aria-modal="true" aria-labelledby="tp-title">
         <div class="time-picker-content">
-            <h3 id="tp-title" class="time-picker-title">Pick a Time</h3>
-            <p id="tp-subtitle" class="time-picker-subtitle"></p>
-            <div class="time-picker-preview" aria-live="polite">
-                <span id="tp-preview-hour">12</span><span class="tp-colon">:</span><span id="tp-preview-minute">00</span><span id="tp-preview-ampm">AM</span>
-            </div>
-            <div class="tp-section">
-                <div class="tp-section-label">Hour</div>
-                <div class="tp-hour-grid" id="tp-hour-grid"></div>
-            </div>
-            <div class="tp-section">
-                <div class="tp-section-label">AM / PM</div>
-                <div class="tp-ampm-row">
-                    <button type="button" class="tp-ampm-btn" data-ampm="AM">AM</button>
-                    <button type="button" class="tp-ampm-btn" data-ampm="PM">PM</button>
+            <h3 id="tp-title" class="time-picker-title">Select Start & End Time</h3>
+
+            <!-- Two Clocks Side-by-Side -->
+            <div class="tp-clocks-container">
+                <!-- Start Time Clock -->
+                <div class="tp-clock-wrapper">
+                    <div class="tp-clock-label">Start Time</div>
+                    <div class="tp-analog-clock" id="tp-start-clock" data-clock="start">
+                        <div class="tp-clock-center"></div>
+                        <div class="tp-hour-hand" id="tp-start-hour-hand"></div>
+                        <div class="tp-minute-hand" id="tp-start-minute-hand"></div>
+                        <!-- Clock numbers generated by JS -->
+                    </div>
+                    <div class="tp-time-display" id="tp-start-display">--:--</div>
+                    <div class="tp-ampm-toggle" id="tp-start-ampm">
+                        <button type="button" class="tp-ampm-btn" data-clock="start" data-ampm="AM">AM</button>
+                        <button type="button" class="tp-ampm-btn" data-clock="start" data-ampm="PM">PM</button>
+                    </div>
+                </div>
+
+                <!-- End Time Clock -->
+                <div class="tp-clock-wrapper">
+                    <div class="tp-clock-label">End Time</div>
+                    <div class="tp-analog-clock" id="tp-end-clock" data-clock="end">
+                        <div class="tp-clock-center"></div>
+                        <div class="tp-hour-hand" id="tp-end-hour-hand"></div>
+                        <div class="tp-minute-hand" id="tp-end-minute-hand"></div>
+                        <!-- Clock numbers generated by JS -->
+                    </div>
+                    <div class="tp-time-display" id="tp-end-display">--:--</div>
+                    <div class="tp-ampm-toggle" id="tp-end-ampm">
+                        <button type="button" class="tp-ampm-btn" data-clock="end" data-ampm="AM">AM</button>
+                        <button type="button" class="tp-ampm-btn" data-clock="end" data-ampm="PM">PM</button>
+                    </div>
                 </div>
             </div>
-            <div class="tp-section">
-                <div class="tp-section-label">Minute</div>
-                <div class="tp-minute-grid" id="tp-minute-grid"></div>
-            </div>
+
+            <!-- Action Buttons -->
             <div class="tp-buttons">
-                <button type="button" id="tp-clear">Clear</button>
+                <button type="button" id="tp-clear">Clear All</button>
                 <button type="button" id="tp-cancel">Cancel</button>
-                <button type="button" id="tp-done">Done</button>
+                <button type="button" id="tp-done">Lock It In</button>
             </div>
         </div>
     </div>
@@ -1729,109 +2229,257 @@
         }
 
         // =====================================================================
-        // CUSTOM TIME PICKER — tap-friendly, works on Mac/iPad/iPhone identically
+        // TIME INPUT MODE TOGGLE
         // =====================================================================
-        const timePickerModal = document.getElementById('time-picker-modal');
-        const tpHourGrid = document.getElementById('tp-hour-grid');
-        const tpMinuteGrid = document.getElementById('tp-minute-grid');
-        const tpPreviewHour = document.getElementById('tp-preview-hour');
-        const tpPreviewMinute = document.getElementById('tp-preview-minute');
-        const tpPreviewAmPm = document.getElementById('tp-preview-ampm');
-        const tpSubtitle = document.getElementById('tp-subtitle');
-        const tpDoneBtn = document.getElementById('tp-done');
-        const tpCancelBtn = document.getElementById('tp-cancel');
-        const tpClearBtn = document.getElementById('tp-clear');
-        const tpAmPmButtons = document.querySelectorAll('.tp-ampm-btn');
+        let useCustomTimePicker = true;
+        const toggleSwitch = document.getElementById('time-input-toggle');
 
-        const tpState = { hour: 12, minute: 0, ampm: 'AM', callback: null };
+        if (toggleSwitch) {
+            toggleSwitch.addEventListener('click', function() {
+                useCustomTimePicker = !useCustomTimePicker;
+                toggleSwitch.classList.toggle('active', useCustomTimePicker);
+                toggleSwitch.setAttribute('aria-checked', useCustomTimePicker);
 
-        function initTimePickerGrids() {
-            if (!tpHourGrid || !tpMinuteGrid) return;
-            tpHourGrid.innerHTML = '';
-            for (let h = 1; h <= 12; h++) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.textContent = h;
-                btn.dataset.hour = h;
-                btn.setAttribute('aria-label', `Hour ${h}`);
-                btn.addEventListener('click', (e) => { e.preventDefault(); tpState.hour = h; updateTimePickerUI(); });
-                tpHourGrid.appendChild(btn);
-            }
-            tpMinuteGrid.innerHTML = '';
-            for (let m = 0; m < 60; m += 5) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.textContent = m.toString().padStart(2, '0');
-                btn.dataset.minute = m;
-                btn.setAttribute('aria-label', `${m} minutes`);
-                btn.addEventListener('click', (e) => { e.preventDefault(); tpState.minute = m; updateTimePickerUI(); });
-                tpMinuteGrid.appendChild(btn);
-            }
-            tpAmPmButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    tpState.ampm = btn.dataset.ampm;
-                    updateTimePickerUI();
+                document.querySelectorAll('input[type="time"]').forEach(input => {
+                    if (useCustomTimePicker) {
+                        input.classList.add('time-input-hidden');
+                        if (input._tpButton) input._tpButton.style.display = 'flex';
+                    } else {
+                        input.classList.remove('time-input-hidden');
+                        if (input._tpButton) input._tpButton.style.display = 'none';
+                    }
                 });
             });
         }
 
-        function updateTimePickerUI() {
-            if (!tpPreviewHour) return;
-            tpPreviewHour.textContent = tpState.hour;
-            tpPreviewMinute.textContent = tpState.minute.toString().padStart(2, '0');
-            tpPreviewAmPm.textContent = tpState.ampm;
-            tpHourGrid.querySelectorAll('button').forEach(btn => {
-                btn.classList.toggle('selected', parseInt(btn.dataset.hour, 10) === tpState.hour);
-            });
-            const snappedMin = (Math.round(tpState.minute / 5) * 5) % 60;
-            tpMinuteGrid.querySelectorAll('button').forEach(btn => {
-                const m = parseInt(btn.dataset.minute, 10);
-                btn.classList.toggle('selected', m === tpState.minute || m === snappedMin);
-            });
-            tpAmPmButtons.forEach(btn => {
-                btn.classList.toggle('selected', btn.dataset.ampm === tpState.ampm);
+        // =====================================================================
+        // DUAL ANALOG CLOCK TIME PICKER (Side-by-Side)
+        // =====================================================================
+        const timePickerModal = document.getElementById('time-picker-modal');
+        const tpStartClock = document.getElementById('tp-start-clock');
+        const tpEndClock = document.getElementById('tp-end-clock');
+        const tpStartDisplay = document.getElementById('tp-start-display');
+        const tpEndDisplay = document.getElementById('tp-end-display');
+        const tpStartHourHand = document.getElementById('tp-start-hour-hand');
+        const tpStartMinuteHand = document.getElementById('tp-start-minute-hand');
+        const tpEndHourHand = document.getElementById('tp-end-hour-hand');
+        const tpEndMinuteHand = document.getElementById('tp-end-minute-hand');
+        const tpDoneBtn = document.getElementById('tp-done');
+        const tpCancelBtn = document.getElementById('tp-cancel');
+        const tpClearBtn = document.getElementById('tp-clear');
+
+        const tpState = {
+            start: { hour: null, minute: null, ampm: 'AM', mode: 'hour' },
+            end: { hour: null, minute: null, ampm: 'AM', mode: 'hour' },
+            startCallback: null,
+            endCallback: null
+        };
+
+        // Get current time and determine AM/PM
+        function getCurrentAMPM() {
+            const now = new Date();
+            const hours = now.getHours();
+            return hours >= 12 ? 'PM' : 'AM';
+        }
+
+        // Initialize a clock with numbers (hours or minutes)
+        function initClock(clockEl, clockType) {
+            if (!clockEl) return;
+
+            clockEl.querySelectorAll('.tp-clock-number').forEach(n => n.remove());
+
+            const mode = tpState[clockType].mode;
+            const isHourMode = mode === 'hour';
+            const clockSize = 180; // Match CSS width/height
+            const centerPoint = clockSize / 2; // 90px
+
+            if (isHourMode) {
+                // Show 1-12 for hours
+                for (let i = 1; i <= 12; i++) {
+                    const angle = (i * 30 - 90) * (Math.PI / 180);
+                    const radius = 65;
+                    const x = centerPoint + radius * Math.cos(angle);
+                    const y = centerPoint + radius * Math.sin(angle);
+
+                    const numEl = document.createElement('div');
+                    numEl.className = 'tp-clock-number';
+                    numEl.textContent = i;
+                    numEl.dataset.value = i;
+                    numEl.dataset.type = 'hour';
+                    numEl.style.left = `${x - 13}px`;
+                    numEl.style.top = `${y - 13}px`;
+
+                    numEl.addEventListener('click', () => handleClockClick(clockType, 'hour', i));
+                    clockEl.appendChild(numEl);
+                }
+            } else {
+                // Show ALL 5-minute intervals: 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55
+                for (let i = 0; i < 12; i++) {
+                    const minute = i * 5;
+                    const angle = (i * 30 - 90) * (Math.PI / 180);
+                    const radius = 65;
+                    const x = centerPoint + radius * Math.cos(angle);
+                    const y = centerPoint + radius * Math.sin(angle);
+
+                    const numEl = document.createElement('div');
+                    numEl.className = 'tp-clock-number';
+                    numEl.textContent = minute === 0 ? '00' : minute;
+                    numEl.dataset.value = minute;
+                    numEl.dataset.type = 'minute';
+                    numEl.style.left = `${x - 13}px`;
+                    numEl.style.top = `${y - 13}px`;
+
+                    numEl.addEventListener('click', () => handleClockClick(clockType, 'minute', minute));
+                    clockEl.appendChild(numEl);
+                }
+            }
+        }
+
+        // Handle clicking a clock number
+        function handleClockClick(clockType, mode, value) {
+            if (mode === 'hour') {
+                tpState[clockType].hour = value;
+                // Auto-switch to minute mode
+                tpState[clockType].mode = 'minute';
+                initClock(clockType === 'start' ? tpStartClock : tpEndClock, clockType);
+            } else {
+                tpState[clockType].minute = value;
+            }
+
+            updateDisplay(clockType);
+            updateHands(clockType);
+            updateSelection(clockType);
+        }
+
+        // Update time display
+        function updateDisplay(clockType) {
+            const data = tpState[clockType];
+            const displayEl = clockType === 'start' ? tpStartDisplay : tpEndDisplay;
+
+            if (data.hour !== null && data.minute !== null) {
+                const hourStr = data.hour;
+                const minStr = data.minute.toString().padStart(2, '0');
+                displayEl.textContent = `${hourStr}:${minStr} ${data.ampm}`;
+            } else if (data.hour !== null) {
+                displayEl.textContent = `${data.hour}:-- ${data.ampm}`;
+            } else {
+                displayEl.textContent = '--:--';
+            }
+        }
+
+        // Update clock hands
+        function updateHands(clockType) {
+            const data = tpState[clockType];
+            const hourHand = clockType === 'start' ? tpStartHourHand : tpEndHourHand;
+            const minuteHand = clockType === 'start' ? tpStartMinuteHand : tpEndMinuteHand;
+
+            if (data.hour !== null) {
+                const hourAngle = (data.hour % 12) * 30;
+                hourHand.style.transform = `rotate(${hourAngle}deg)`;
+                hourHand.style.opacity = data.mode === 'hour' ? '1' : '0.3';
+            }
+
+            if (data.minute !== null) {
+                const minuteAngle = data.minute * 6;
+                minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+                minuteHand.style.opacity = data.mode === 'minute' ? '1' : '0.3';
+            }
+        }
+
+        // Update selected number highlighting
+        function updateSelection(clockType) {
+            const clockEl = clockType === 'start' ? tpStartClock : tpEndClock;
+            const data = tpState[clockType];
+
+            clockEl.querySelectorAll('.tp-clock-number').forEach(num => {
+                const value = parseInt(num.dataset.value);
+                const type = num.dataset.type;
+                let isSelected = false;
+
+                if (type === 'hour' && data.mode === 'hour') {
+                    isSelected = value === data.hour;
+                } else if (type === 'minute' && data.mode === 'minute') {
+                    isSelected = value === data.minute;
+                }
+
+                num.classList.toggle('selected', isSelected);
             });
         }
 
-        /**
-         * Open the custom time picker.
-         * @param {string} currentValue - 24-hour HH:MM, or '' for default (current time)
-         * @param {function} callback - receives new 24-hour HH:MM string, or '' if cleared
-         * @param {string} [subtitle] - optional context under the title
-         */
-        function openTimePicker(currentValue, callback, subtitle) {
-            if (!timePickerModal) return;
-            tpState.callback = callback;
-            if (tpSubtitle) {
-                tpSubtitle.textContent = subtitle || '';
-                tpSubtitle.style.display = subtitle ? '' : 'none';
-            }
-            if (currentValue && /^\d{2}:\d{2}$/.test(currentValue)) {
-                const [h24, m] = currentValue.split(':').map(Number);
-                tpState.ampm = h24 >= 12 ? 'PM' : 'AM';
+        // Setup AM/PM buttons
+        function initAMPMButtons() {
+            document.querySelectorAll('.tp-ampm-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const clockType = btn.dataset.clock;
+                    const ampm = btn.dataset.ampm;
+
+                    tpState[clockType].ampm = ampm;
+
+                    // Update button states for this clock
+                    document.querySelectorAll(`.tp-ampm-btn[data-clock="${clockType}"]`).forEach(b => {
+                        b.classList.toggle('selected', b.dataset.ampm === ampm);
+                    });
+
+                    updateDisplay(clockType);
+                });
+            });
+        }
+
+        function openTimePicker(startValue, endValue, startCallback, endCallback) {
+            if (!timePickerModal || !useCustomTimePicker) return;
+
+            tpState.startCallback = startCallback;
+            tpState.endCallback = endCallback;
+
+            // Get current AM/PM
+            const currentAMPM = getCurrentAMPM();
+
+            // Parse start time or use defaults
+            if (startValue && /^\d{2}:\d{2}$/.test(startValue)) {
+                const [h24, m] = startValue.split(':').map(Number);
+                tpState.start.ampm = h24 >= 12 ? 'PM' : 'AM';
                 let h12 = h24 % 12; if (h12 === 0) h12 = 12;
-                tpState.hour = h12;
-                tpState.minute = m;
+                tpState.start.hour = h12;
+                tpState.start.minute = m;
+                tpState.start.mode = 'hour';
             } else {
-                // Default to current Boston time, snapped to nearest 5 min
-                const now = new Date().toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' });
-                const [h24, m] = now.split(':').map(Number);
-                tpState.ampm = h24 >= 12 ? 'PM' : 'AM';
-                let h12 = h24 % 12; if (h12 === 0) h12 = 12;
-                tpState.hour = h12;
-                let snapped = Math.round(m / 5) * 5; if (snapped >= 60) snapped = 55;
-                tpState.minute = snapped;
+                tpState.start = { hour: null, minute: null, ampm: currentAMPM, mode: 'hour' };
             }
-            updateTimePickerUI();
+
+            // Parse end time or use defaults
+            if (endValue && /^\d{2}:\d{2}$/.test(endValue)) {
+                const [h24, m] = endValue.split(':').map(Number);
+                tpState.end.ampm = h24 >= 12 ? 'PM' : 'AM';
+                let h12 = h24 % 12; if (h12 === 0) h12 = 12;
+                tpState.end.hour = h12;
+                tpState.end.minute = m;
+                tpState.end.mode = 'hour';
+            } else {
+                tpState.end = { hour: null, minute: null, ampm: currentAMPM, mode: 'hour' };
+            }
+
+            // Initialize both clocks
+            initClock(tpStartClock, 'start');
+            initClock(tpEndClock, 'end');
+
+            // Update displays
+            updateDisplay('start');
+            updateDisplay('end');
+            updateHands('start');
+            updateHands('end');
+
+            // Update AM/PM button states
+            document.querySelectorAll('.tp-ampm-btn[data-clock="start"]').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.ampm === tpState.start.ampm);
+            });
+            document.querySelectorAll('.tp-ampm-btn[data-clock="end"]').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.ampm === tpState.end.ampm);
+            });
+
             timePickerModal.classList.add('active');
-            // Scroll modal to top when opening
-            setTimeout(() => {
-                if (timePickerModal) {
-                    timePickerModal.scrollTop = 0;
-                }
-            }, 10);
-            // Prevent body scroll on mobile
+            setTimeout(() => { if (timePickerModal) timePickerModal.scrollTop = 0; }, 10);
+
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
@@ -1840,57 +2488,94 @@
         function closeTimePicker() {
             if (!timePickerModal) return;
             timePickerModal.classList.remove('active');
-            tpState.callback = null;
-            // Restore body scroll
             document.body.style.overflow = '';
             document.body.style.position = '';
             document.body.style.width = '';
         }
 
         function confirmTimePicker() {
-            let h24 = tpState.hour;
-            if (tpState.ampm === 'AM' && h24 === 12) h24 = 0;
-            else if (tpState.ampm === 'PM' && h24 !== 12) h24 += 12;
-            const timeStr = `${h24.toString().padStart(2, '0')}:${tpState.minute.toString().padStart(2, '0')}`;
-            const cb = tpState.callback;
+            const startData = tpState.start;
+            const endData = tpState.end;
+
+            // Convert to 24-hour format
+            let startTimeStr = '';
+            if (startData.hour !== null && startData.minute !== null) {
+                let h24 = startData.hour;
+                if (startData.ampm === 'AM' && h24 === 12) h24 = 0;
+                else if (startData.ampm === 'PM' && h24 !== 12) h24 += 12;
+                startTimeStr = `${h24.toString().padStart(2, '0')}:${startData.minute.toString().padStart(2, '0')}`;
+            }
+
+            let endTimeStr = '';
+            if (endData.hour !== null && endData.minute !== null) {
+                let h24 = endData.hour;
+                if (endData.ampm === 'AM' && h24 === 12) h24 = 0;
+                else if (endData.ampm === 'PM' && h24 !== 12) h24 += 12;
+                endTimeStr = `${h24.toString().padStart(2, '0')}:${endData.minute.toString().padStart(2, '0')}`;
+            }
+
+            const startCb = tpState.startCallback;
+            const endCb = tpState.endCallback;
+
             closeTimePicker();
-            if (cb) cb(timeStr);
+
+            if (startCb) startCb(startTimeStr);
+            if (endCb) endCb(endTimeStr);
+
+            // Trigger duration check after times are set
+            setTimeout(checkTaskDuration, 100);
         }
 
-        function clearTimePickerValue() {
-            const cb = tpState.callback;
-            closeTimePicker();
-            if (cb) cb('');
+        function clearTimePickerValues() {
+            const currentAMPM = getCurrentAMPM();
+            tpState.start = { hour: null, minute: null, ampm: currentAMPM, mode: 'hour' };
+            tpState.end = { hour: null, minute: null, ampm: currentAMPM, mode: 'hour' };
+
+            initClock(tpStartClock, 'start');
+            initClock(tpEndClock, 'end');
+            updateDisplay('start');
+            updateDisplay('end');
+
+            // Update AM/PM buttons
+            document.querySelectorAll('.tp-ampm-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.ampm === currentAMPM);
+            });
         }
 
         if (tpDoneBtn) tpDoneBtn.addEventListener('click', (e) => { e.preventDefault(); confirmTimePicker(); });
         if (tpCancelBtn) tpCancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeTimePicker(); });
-        if (tpClearBtn) tpClearBtn.addEventListener('click', (e) => { e.preventDefault(); clearTimePickerValue(); });
+        if (tpClearBtn) tpClearBtn.addEventListener('click', (e) => { e.preventDefault(); clearTimePickerValues(); });
+
         if (timePickerModal) {
             timePickerModal.addEventListener('click', (e) => {
                 if (e.target === timePickerModal) closeTimePicker();
             });
         }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && timePickerModal && timePickerModal.classList.contains('active')) {
                 closeTimePicker();
             }
         });
-        initTimePickerGrids();
+
+        initAMPMButtons();
 
         /**
-         * Attach the custom picker to a native <input type="time">. The input
-         * stays hidden but keeps its value, so all existing code that reads
-         * `.value` still works unchanged.
+         * Attach the custom picker to a native <input type="time">
          */
         function enhanceTimeInput(input, options = {}) {
             if (!input || input.dataset.tpEnhanced === 'true') return input._tpButton;
             input.dataset.tpEnhanced = 'true';
-            input.classList.add('time-input-hidden');
+
+            if (useCustomTimePicker) {
+                input.classList.add('time-input-hidden');
+            }
 
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'time-picker-button';
+            if (!useCustomTimePicker) btn.style.display = 'none';
+
             btn.setAttribute('aria-label', options.ariaLabel || input.getAttribute('aria-label') || 'Pick a time');
             const iconSpan = document.createElement('span');
             iconSpan.className = 'tp-icon';
@@ -1904,7 +2589,6 @@
             const updateLabel = () => {
                 const val = input.value;
                 if (val && /^\d{2}:\d{2}$/.test(val)) {
-                    // formatTimeTo12Hour is defined later; safe because this runs on click, not now
                     labelSpan.textContent = formatTimeTo12Hour(val);
                     btn.classList.remove('empty');
                 } else {
@@ -1916,11 +2600,42 @@
 
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                openTimePicker(input.value, (newTime) => {
-                    input.value = newTime || '';
-                    updateLabel();
-                    try { input.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
-                }, options.subtitle);
+                if (!useCustomTimePicker) {
+                    input.focus();
+                    return;
+                }
+
+                // Find paired inputs
+                const form = input.closest('form, #add-task-form, .task-edit-form');
+                let startInput = input;
+                let endInput = null;
+
+                if (form) {
+                    const timeInputs = form.querySelectorAll('input[type="time"]');
+                    if (timeInputs.length >= 2) {
+                        startInput = timeInputs[0];
+                        endInput = timeInputs[1];
+                    }
+                }
+
+                openTimePicker(
+                    startInput ? startInput.value : '',
+                    endInput ? endInput.value : '',
+                    (newTime) => {
+                        if (startInput) {
+                            startInput.value = newTime || '';
+                            if (startInput._tpUpdate) startInput._tpUpdate();
+                            try { startInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+                        }
+                    },
+                    (newTime) => {
+                        if (endInput) {
+                            endInput.value = newTime || '';
+                            if (endInput._tpUpdate) endInput._tpUpdate();
+                            try { endInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+                        }
+                    }
+                );
             });
 
             input._tpButton = btn;
@@ -1929,16 +2644,371 @@
             return btn;
         }
 
-        /** Programmatically set a time input's value AND refresh the picker button label. */
         function setTimeInputValue(input, value) {
             if (!input) return;
             input.value = value || '';
             if (typeof input._tpUpdate === 'function') input._tpUpdate();
         }
 
-        // Enhance the static time inputs on page load. (Dynamic ones in edit-mode
-        // are enhanced when created — see enterEditMode.)
+        // Enhance all time inputs on page load
         document.querySelectorAll('input[type="time"]').forEach(inp => enhanceTimeInput(inp));
+
+        // =====================================================================
+        // SUB-TASK MANAGEMENT FOR 2+ HOUR TASKS (IN-CARD PLANNING)
+        // =====================================================================
+
+        // Calculate duration in minutes between two times
+        function calculateDuration(startTime, endTime) {
+            if (!startTime || !endTime) {
+                console.log(`Duration calculation: Missing time(s) - Start: ${startTime}, End: ${endTime}`);
+                return 0;
+            }
+
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+
+            const startMinutes = startHour * 60 + startMin;
+            let endMinutes = endHour * 60 + endMin;
+
+            // Handle overnight tasks
+            if (endMinutes <= startMinutes) {
+                endMinutes += 24 * 60;
+            }
+
+            const duration = endMinutes - startMinutes;
+            console.log(`Duration calculation: ${startTime} to ${endTime} = ${duration} minutes`);
+            return duration;
+        }
+
+        // Check if task duration is 2+ hours
+        function isLongTask(startTime, endTime) {
+            const duration = calculateDuration(startTime, endTime);
+            return duration >= 120; // 2 hours = 120 minutes
+        }
+
+        // Add sub-task planning capability to a task element
+        function addSubtaskPlanningToTask(taskElement) {
+            const startTime = taskElement.dataset.startTime;
+            const endTime = taskElement.dataset.endTime;
+
+            console.log(`Checking task for sub-task planning: Start: ${startTime}, End: ${endTime}`);
+
+            if (!isLongTask(startTime, endTime)) {
+                console.log("Task duration less than 2 hours, skipping sub-task planning");
+                return;
+            }
+
+            console.log("Task is 2+ hours, adding sub-task planning capability");
+
+            // Mark task as having sub-task capability
+            taskElement.classList.add('task-has-subtasks');
+
+            // Add click handler to toggle sub-task planning section
+            const displayContent = taskElement.querySelector('.task-content-display');
+            if (displayContent) {
+                displayContent.style.cursor = 'pointer';
+                displayContent.addEventListener('click', (e) => {
+                    console.log("Task clicked for sub-task planning");
+                    // Don't toggle if clicking on edit/delete buttons or if in edit mode
+                    if (taskElement.classList.contains('editing')) {
+                        console.log("Task in edit mode, not opening sub-task planning");
+                        return;
+                    }
+                    if (e.target.closest('.delete-task-btn')) {
+                        console.log("Delete button clicked, not opening sub-task planning");
+                        return;
+                    }
+
+                    toggleSubtaskPlanning(taskElement);
+                    e.stopPropagation();
+                });
+                console.log("Click handler added to task");
+            } else {
+                console.log("Could not find task-content-display element");
+            }
+        }
+
+        // Toggle sub-task planning section visibility
+        function toggleSubtaskPlanning(taskElement) {
+            let planningSection = taskElement.querySelector('.subtask-planning-section');
+
+            if (planningSection) {
+                planningSection.classList.toggle('visible');
+            } else {
+                createSubtaskPlanningSection(taskElement);
+            }
+        }
+
+        // Create sub-task planning UI inside task card
+        function createSubtaskPlanningSection(taskElement) {
+            const taskId = taskElement.dataset.taskId;
+            const taskData = getTaskDataFromElement(taskElement);
+
+            const planningSection = document.createElement('div');
+            planningSection.className = 'subtask-planning-section visible';
+
+            planningSection.innerHTML = `
+                <div class="subtask-plan-header">
+                    <h5>📋 Plan Sub-Tasks</h5>
+                </div>
+                <div class="subtask-plan-list" id="subtask-plan-list-${taskId}">
+                    <!-- Sub-task items will be added here -->
+                </div>
+                <button type="button" class="subtask-plan-add-btn" data-task-id="${taskId}">+ Add Sub-Task</button>
+                <button type="button" class="subtask-plan-save-btn" data-task-id="${taskId}">Save Sub-Tasks</button>
+            `;
+
+            taskElement.appendChild(planningSection);
+
+            // Render existing sub-tasks if any
+            if (taskData.subtasks && taskData.subtasks.length > 0) {
+                taskData.subtasks.forEach(subtask => {
+                    addSubtaskPlanItem(taskId, subtask);
+                });
+            }
+
+            // Add event listeners
+            const addBtn = planningSection.querySelector('.subtask-plan-add-btn');
+            addBtn.addEventListener('click', () => addSubtaskPlanItem(taskId));
+
+            const saveBtn = planningSection.querySelector('.subtask-plan-save-btn');
+            saveBtn.addEventListener('click', () => saveSubtasksFromPlanning(taskId));
+        }
+
+        // Add a sub-task planning input row
+        function addSubtaskPlanItem(taskId, subtaskData = null) {
+            const listContainer = document.getElementById(`subtask-plan-list-${taskId}`);
+            if (!listContainer) return;
+
+            const itemId = subtaskData?.id || `st_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+            const item = document.createElement('div');
+            item.className = 'subtask-plan-item';
+            item.dataset.subtaskId = itemId;
+
+            item.innerHTML = `
+                <input type="text"
+                       placeholder="Sub-task name"
+                       value="${subtaskData?.name || ''}"
+                       data-field="name">
+                <input type="time"
+                       value="${subtaskData?.startTime || ''}"
+                       data-field="startTime">
+                <input type="time"
+                       value="${subtaskData?.endTime || ''}"
+                       data-field="endTime">
+                <button type="button"
+                        class="subtask-plan-remove"
+                        aria-label="Remove">×</button>
+            `;
+
+            listContainer.appendChild(item);
+
+            // Add event listener to remove button
+            const removeBtn = item.querySelector('.subtask-plan-remove');
+            removeBtn.addEventListener('click', () => item.remove());
+
+            // Enhance time inputs with custom picker
+            item.querySelectorAll('input[type="time"]').forEach(input => {
+                enhanceTimeInput(input, { placeholder: 'Time' });
+            });
+        }
+
+        // Save sub-tasks from planning section to task data
+        async function saveSubtasksFromPlanning(taskId) {
+            const listContainer = document.getElementById(`subtask-plan-list-${taskId}`);
+            if (!listContainer) return;
+
+            const subtasks = [];
+            const items = listContainer.querySelectorAll('.subtask-plan-item');
+
+            items.forEach(item => {
+                const subtaskId = item.dataset.subtaskId;
+                const name = item.querySelector('[data-field="name"]').value.trim();
+                const startTime = item.querySelector('[data-field="startTime"]').value;
+                const endTime = item.querySelector('[data-field="endTime"]').value;
+
+                if (name && startTime && endTime) {
+                    subtasks.push({
+                        id: subtaskId,
+                        name: name,
+                        startTime: startTime,
+                        endTime: endTime,
+                        completed: false
+                    });
+                }
+            });
+
+            // Save to Firebase
+            const tasks = await loadTasksFromFirebase(currentUserId);
+            const task = tasks.find(t => t.id === taskId);
+
+            if (task) {
+                task.subtasks = subtasks;
+                await saveTasksToFirebase(currentUserId, tasks);
+                showToast(`✓ ${subtasks.length} sub-task(s) saved!`);
+
+                // Close the planning section
+                const taskElement = document.getElementById(taskId);
+                const planningSection = taskElement?.querySelector('.subtask-planning-section');
+                if (planningSection) {
+                    planningSection.classList.remove('visible');
+                }
+            }
+        }
+
+        // Get task data from task element
+        function getTaskDataFromElement(taskElement) {
+            return {
+                id: taskElement.dataset.taskId,
+                text: taskElement.dataset.text,
+                startTime: taskElement.dataset.startTime,
+                endTime: taskElement.dataset.endTime,
+                completionDate: taskElement.dataset.completionDate || null,
+                subtasks: [] // Will be loaded from Firebase if needed
+            };
+        }
+
+        // Render sub-tasks in kanban card (for IN PROGRESS column only)
+        function renderTaskSubtasks(task, taskElement) {
+            if (!task.subtasks || task.subtasks.length === 0) return;
+
+            // Only show sub-tasks in IN PROGRESS column
+            const column = taskElement.closest('.kanban-column');
+            if (!column || column.id !== 'inprogress') return;
+
+            const subtasksContainer = document.createElement('div');
+            subtasksContainer.className = 'task-subtasks';
+
+            const toggle = document.createElement('div');
+            toggle.className = 'subtasks-toggle';
+            toggle.innerHTML = `
+                <span class="subtasks-toggle-text">${task.subtasks.length} Sub-Tasks</span>
+                <span class="subtasks-toggle-icon">▼</span>
+            `;
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'subtasks-dropdown';
+
+            task.subtasks.forEach(subtask => {
+                const subtaskItem = document.createElement('div');
+                subtaskItem.className = 'subtask-item';
+                subtaskItem.dataset.subtaskId = subtask.id;
+
+                if (subtask.completed) {
+                    subtaskItem.classList.add('completed');
+                }
+
+                // Check if sub-task is currently active
+                const now = new Date();
+                const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                const isActive = currentTime >= subtask.startTime && currentTime <= subtask.endTime;
+
+                if (isActive && !subtask.completed) {
+                    subtaskItem.classList.add('active');
+                }
+
+                subtaskItem.innerHTML = `
+                    <div class="subtask-name">${subtask.name}</div>
+                    <div class="subtask-time">
+                        <span>${formatTimeTo12Hour(subtask.startTime)} - ${formatTimeTo12Hour(subtask.endTime)}</span>
+                        <span class="subtask-countdown" data-end="${subtask.endTime}"></span>
+                        <span class="subtask-check" role="button" aria-label="Mark sub-task complete">
+                            ${subtask.completed ? '✓' : '○'}
+                        </span>
+                    </div>
+                `;
+
+                // Add click handler for completion toggle
+                const checkBtn = subtaskItem.querySelector('.subtask-check');
+                checkBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSubtaskComplete(task.id, subtask.id);
+                });
+
+                dropdown.appendChild(subtaskItem);
+            });
+
+            subtasksContainer.appendChild(toggle);
+            subtasksContainer.appendChild(dropdown);
+
+            // Toggle dropdown on click
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('expanded');
+                dropdown.classList.toggle('visible');
+            });
+
+            taskElement.appendChild(subtasksContainer);
+
+            // Start countdown timers for active sub-tasks
+            updateSubtaskCountdowns(taskElement);
+        }
+
+        // Update countdown timers for sub-tasks
+        function updateSubtaskCountdowns(taskElement) {
+            if (!taskElement) {
+                // Update all tasks in IN PROGRESS
+                const inProgressColumn = document.getElementById('inprogress');
+                if (inProgressColumn) {
+                    inProgressColumn.querySelectorAll('.kanban-task').forEach(updateSubtaskCountdowns);
+                }
+                return;
+            }
+
+            const countdowns = taskElement.querySelectorAll('.subtask-countdown');
+            const now = new Date();
+
+            countdowns.forEach(countdown => {
+                const endTime = countdown.dataset.end;
+                if (!endTime) return;
+
+                const [endHour, endMin] = endTime.split(':').map(Number);
+                const endDate = new Date();
+                endDate.setHours(endHour, endMin, 0, 0);
+
+                const diff = endDate - now;
+
+                if (diff <= 0) {
+                    countdown.textContent = 'Ended';
+                    countdown.classList.remove('urgent');
+                } else {
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    countdown.textContent = hours > 0
+                        ? `${hours}h ${minutes}m`
+                        : `${minutes}m ${seconds}s`;
+
+                    // Mark as urgent if less than 10 minutes remaining
+                    if (diff < 10 * 60 * 1000) {
+                        countdown.classList.add('urgent');
+                    } else {
+                        countdown.classList.remove('urgent');
+                    }
+                }
+            });
+        }
+
+        // Toggle sub-task completion
+        async function toggleSubtaskComplete(taskId, subtaskId) {
+            const tasks = await loadTasksFromFirebase(currentUserId);
+            const task = tasks.find(t => t.id === taskId);
+
+            if (task && task.subtasks) {
+                const subtask = task.subtasks.find(st => st.id === subtaskId);
+                if (subtask) {
+                    subtask.completed = !subtask.completed;
+                    await saveTasksToFirebase(currentUserId, tasks);
+                    renderTasks();
+                }
+            }
+        }
+
+        // Start interval to update sub-task countdowns
+        setInterval(() => {
+            updateSubtaskCountdowns();
+        }, 1000); // Update every second
 
         // --- Utility Functions ---
 
@@ -2476,6 +3546,16 @@
                 if (event.target === deleteBtn || deleteBtn.contains(event.target)) return;
                 enterEditMode(task);
             });
+
+            // Render sub-tasks if task is in IN PROGRESS column and has sub-tasks
+            if (columnId === 'inprogress' && taskData.subtasks && taskData.subtasks.length > 0) {
+                renderTaskSubtasks(taskData, task);
+            }
+
+            // Add sub-task planning capability for 2+ hour tasks in TO DO column
+            if (columnId === 'todo') {
+                addSubtaskPlanningToTask(task);
+            }
 
             return task;
         }
@@ -3267,7 +4347,13 @@
             }
 
             // Create task data object with sanitized text
-            const newTaskData = { text: sanitizedTaskText, startTime: startTime, endTime: endTime, completionDate: null };
+            const newTaskData = {
+                text: sanitizedTaskText,
+                startTime: startTime,
+                endTime: endTime,
+                completionDate: null
+            };
+
             // Create the task element for the UI
             const newTaskElement = createTaskElement(newTaskData, 'todo');
 
@@ -3284,6 +4370,9 @@
             taskInput.value = '';
             setTimeInputValue(startTimeInput, '');
             setTimeInputValue(endTimeInput, '');
+
+            // Clear sub-tasks
+            clearSubtasks();
 
             // Save the updated board state to Firestore
             await saveCurrentBoardState();
