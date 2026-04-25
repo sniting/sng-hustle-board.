@@ -1614,7 +1614,10 @@
         }
 
         async function loginWithEmailPassword(email, password, remember = false) {
+            console.log(`🔵 Attempting login for: ${email}`);
+
             if (!auth) {
+                console.log("🔴 Auth not available, using offline mode");
                 // Handle offline mode login
                 const offlineUserId = `offline-${email}`;
                 setCurrentUser({
@@ -1625,17 +1628,18 @@
                 showToast("Logged in offline mode. Your data will be stored locally.");
                 setupCollections(offlineUserId);
                 hideAuthOverlay();
-                
+
                 if (remember) {
                     storeRememberForDay(offlineUserId, email, password);
                 }
                 return;
             }
-            
+
             try {
+                console.log("🔵 Calling Firebase auth.signInWithEmailAndPassword...");
                 authErrorMessage.textContent = "";
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                console.log("Login successful");
+                console.log("✅ Login successful for user:", userCredential.user.uid);
                 
                 // Handle remember for the day
                 if (remember) {
@@ -1740,9 +1744,11 @@
         }
 
         function setCurrentUser(user) {
+            console.log(`🔵 Setting current user:`, user.uid, user.email);
             currentUser = user;
             currentUserId = user.uid;
-            
+            console.log(`✅ Global currentUserId set to: ${currentUserId}`);
+
             if (userInfo) {
                 userInfo.textContent = user.displayName || user.email.split('@')[0];
             }
@@ -1798,22 +1804,29 @@
         }
 
         function setupCollections(userId) {
+            console.log(`🔵 setupCollections called with userId: ${userId}`);
+
             if (db) {
-                console.log("Setting up collections for user:", userId);
+                console.log("✅ Setting up Firebase collections for user:", userId);
                 hustleTasksCollection = db.collection(`users/${userId}/hustle_tasks`);
                 hustleIdeaBoxCollection = db.collection(`users/${userId}/hustle_ideaBoxTasks`);
                 hustleArchiveCollection = db.collection(`users/${userId}/hustle_archive`);
+                console.log("✅ Collections initialized:");
+                console.log(`   - Tasks: users/${userId}/hustle_tasks`);
+                console.log(`   - Ideas: users/${userId}/hustle_ideaBoxTasks`);
+                console.log(`   - Archive: users/${userId}/hustle_archive`);
             } else {
-                console.warn("Database not initialized, using local storage only");
+                console.warn("🔴 Database not initialized, using local storage only");
             }
 
             // DUPLICATE-FIX: prevent the auth-race from running initializeApp twice,
             // which was causing two concurrent displayTasksForDate calls.
             if (isAppInitialized) {
-                console.log("App already initialized — skipping duplicate init.");
+                console.log("⚠️ App already initialized — skipping duplicate init.");
                 return;
             }
             isAppInitialized = true;
+            console.log("🚀 Calling initializeApp()...");
             initializeApp();
         }
 
@@ -1853,17 +1866,21 @@
 
         function checkRememberedLogin() {
             try {
+                console.log("🔵 Checking for remembered login...");
                 const rememberedLogin = localStorage.getItem('hustleBoard_remember');
                 const persistentAuth = localStorage.getItem('hustleBoard_persistentAuth');
 
                 if (!rememberedLogin || !persistentAuth) {
+                    console.log("🔴 No remembered login found");
                     return false;
                 }
 
                 const loginData = JSON.parse(rememberedLogin);
+                console.log("🔵 Found login data for:", loginData.email);
 
                 // Check if login data is expired
                 if (loginData.expiry < Date.now()) {
+                    console.log("🔴 Login data expired");
                     clearRememberForDay(); // Clear expired data
                     return false;
                 }
@@ -1872,7 +1889,7 @@
                 loginData.lastActive = Date.now();
                 localStorage.setItem('hustleBoard_remember', JSON.stringify(loginData));
 
-                console.log("Found remembered login, attempting auto-login (expires in " +
+                console.log("✅ Found remembered login, attempting auto-login (expires in " +
                     Math.round((loginData.expiry - Date.now()) / (1000 * 60 * 60 * 24)) + " days)");
 
                 // Auto-login with stored credentials
@@ -2857,6 +2874,44 @@
             }
         }
 
+        // Load tasks from Firebase for the current date
+        async function loadTasksFromFirebase(userId) {
+            console.log(`🔵 loadTasksFromFirebase called for user: ${userId}`);
+            const dateString = currentSelectedDate || getCurrentDateString(BOSTON_TIMEZONE);
+            const tasksForDay = await loadTasksFromFirestore(dateString);
+
+            // Flatten tasks from all columns into a single array
+            const allTasks = [];
+            ['todo', 'inprogress', 'done'].forEach(column => {
+                if (tasksForDay[column]) {
+                    tasksForDay[column].forEach(task => {
+                        task.column = column; // Track which column it's from
+                        allTasks.push(task);
+                    });
+                }
+            });
+
+            console.log(`✅ Loaded ${allTasks.length} tasks from Firebase`);
+            return allTasks;
+        }
+
+        // Save tasks to Firebase for the current date
+        async function saveTasksToFirebase(userId, tasks) {
+            console.log(`🔵 saveTasksToFirebase called for user: ${userId}`);
+            const dateString = currentSelectedDate || getCurrentDateString(BOSTON_TIMEZONE);
+
+            // Organize tasks back into columns
+            const organizedTasks = { todo: [], inprogress: [], done: [] };
+            tasks.forEach(task => {
+                const column = task.column || 'todo';
+                delete task.column; // Remove the column property before saving
+                organizedTasks[column].push(task);
+            });
+
+            await saveTasksToFirestore(dateString, organizedTasks);
+            console.log(`✅ Saved tasks to Firebase for date: ${dateString}`);
+        }
+
         // Get task data from task element
         function getTaskDataFromElement(taskElement) {
             return {
@@ -3000,7 +3055,10 @@
                 if (subtask) {
                     subtask.completed = !subtask.completed;
                     await saveTasksToFirebase(currentUserId, tasks);
-                    renderTasks();
+
+                    // Reload the current date's tasks to refresh the display
+                    const dateString = currentSelectedDate || getCurrentDateString(BOSTON_TIMEZONE);
+                    await displayTasksForDate(dateString);
                 }
             }
         }
@@ -3135,14 +3193,18 @@
         async function loadTasksFromFirestore(dateString) {
             // Check if Firestore is initialized
             if (!db || !hustleTasksCollection) {
+                console.warn("🔴 Firebase/Firestore not initialized - db:", !!db, "collection:", !!hustleTasksCollection);
                 console.log("Using localStorage as Firestore is not available");
                 return loadTasksFromLocalStorage(dateString);
             }
 
-            console.log(`Attempting to load daily tasks for date: ${dateString}...`);
+            console.log(`🔵 Attempting to load daily tasks from Firebase for date: ${dateString}...`);
+            console.log(`🔵 Current user ID: ${currentUserId}`);
+            console.log(`🔵 Collection path: users/${currentUserId}/hustle_tasks`);
+
             // Validate the date string format
             if (!dateString || typeof dateString !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-                console.error(`Invalid dateString provided to loadTasksFromFirestore: ${dateString}`);
+                console.error(`🔴 Invalid dateString provided to loadTasksFromFirestore: ${dateString}`);
                 showToast(`Internal Error: Invalid date format. Using local data if available.`);
                 return loadTasksFromLocalStorage(dateString);
             }
@@ -3152,11 +3214,14 @@
             const legacyDocRef = legacyTasksCollection ? legacyTasksCollection.doc(dateString) : null;
 
             try {
-                console.log(`Fetching document: ${docRef.path}`);
+                console.log(`🔵 Fetching document: ${docRef.path}`);
                 const docSnap = await docRef.get(); // Attempt to get the document
+
+                console.log(`🔵 Document exists: ${docSnap.exists}`);
 
                 if (docSnap.exists) {
                     const data = docSnap.data() || {};
+                    console.log(`✅ Found Firebase data for ${dateString}:`, data);
 
                     // DUPLICATE-FIX: dedup on load + self-heal.
                     // If dedup removes anything, write the cleaned data back so the
@@ -5101,21 +5166,28 @@
 
         // --- Initialize the app ---
         function initializeApp() {
+            console.log("🚀 initializeApp() called");
+            console.log(`🔵 Current user ID: ${currentUserId}`);
+            console.log(`🔵 Firebase initialized: ${!!db}`);
+            console.log(`🔵 Collections initialized: ${!!hustleTasksCollection}`);
+
             const currentBostonDate = getCurrentDateString(BOSTON_TIMEZONE);
+            console.log(`🔵 Current Boston date: ${currentBostonDate}`);
 
             if (dateSelector) {
                 dateSelector.value = currentBostonDate;
                 try {
+                    console.log("🔵 Calling displayTasksForDate...");
                     displayTasksForDate(currentBostonDate);
                 } catch (error) {
-                    console.error("Failed initial daily task load:", error);
+                    console.error("🔴 Failed initial daily task load:", error);
                 }
 
                 if (!listenersInitialized) {
                     dateSelector.addEventListener('change', handleDateChange);
                 }
             } else {
-                console.error("Date selector element not found.");
+                console.error("🔴 Date selector element not found.");
                 try { displayTasksForDate(currentBostonDate); } catch (error) { /* Ignore */ }
             }
 
